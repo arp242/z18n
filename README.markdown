@@ -14,7 +14,7 @@ Caveat emptor!
 z18n is a i18n library for Go. It can be used to translate Go applications
 and/or localize various aspects such as dates and numbers.
 
-Import as `zgo.at/z18n`. API docs: https://pkg.go.dev/zgo.at/z18n
+Import as `zgo.at/z18n`. API docs: https://godocs.io/zgo.at/z18n
 
 The chief motivation for writing this is that I wanted a nice painless API (as
 painless as i18n gets anyway), and none of the existing solutions that I could

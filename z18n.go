@@ -5,8 +5,8 @@
 // A detailed guide to get started is available in the project README,
 // accessible at:
 //
-//   https://github.com/zgoat/z18n or
-//   https://pkg.go.dev/zgo.at/z18n (also includes API docs)
+//   https://github.com/arp242/z18n or
+//   https://godocs.io/zgo.at/z18n (also includes API docs)
 package z18n
 
 import (
