@@ -39,18 +39,13 @@ func (b *Bundle) ReadMessages(fsys fs.FS, lang language.Tag, file string) error 
 		return err
 	}
 
-	// TODO: is this really needed?
-	if m != nil {
-		for k, v := range m {
-			v.ID = k
-			m[k] = v
-		}
-	}
-
-	// TODO
 	for k, v := range m {
-		_, _ = k, v
-		b.AddMessages(lang, nil)
+		b.AddMessages(lang, map[string]Msg{
+			k: Msg{
+				ID:      k,
+				Default: v.Default,
+			},
+		})
 	}
 
 	return nil
