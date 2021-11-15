@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"zgo.at/z18n"
 	"zgo.at/z18n/finder"
 	"zgo.at/zli"
 )
 
-const usage = `
-z18n scans files for translatable strings.
+const usage = `z18n scans files for translatable strings.
 
 https://github.com/zgoat/z18n
 
@@ -40,6 +38,7 @@ Commands:
 func main() {
 	f := zli.NewFlags(os.Args)
 	var (
+		help   = f.Bool(false, "help", "h")
 		merge  = f.String("", "merge")
 		format = f.String("toml", "format")
 		fun    = f.StringList([]string{"z18n.T", "z18n.Locale.T", "T"}, "fun")
@@ -48,9 +47,14 @@ func main() {
 	)
 	zli.F(f.Parse())
 
+	if help.Bool() {
+		fmt.Print(usage)
+		return
+	}
+
 	switch f.ShiftCommand("help", "convert", "find") {
 	case zli.CommandAmbiguous, zli.CommandUnknown:
-		zli.Fatalf("cmd wrong")
+		zli.Fatalf("unknown command")
 	case "help", zli.CommandNoneGiven:
 		fmt.Print(usage)
 	case "convert":
@@ -67,11 +71,13 @@ func main() {
 		zli.F(err)
 
 		f, ok := map[string]func() (string, error){
-			"toml":    found.TOML,
-			"json":    found.JSON,
-			"go":      found.Go,
-			"gettext": found.Gettext,
-			"ls":      found.List,
+			"toml": found.TOML,
+			"json": found.JSON,
+			"yaml": found.YAML,
+			"sql":  found.SQL,
+			"go":   found.Go,
+			"po":   found.Po,
+			"ls":   found.List,
 		}[format.String()]
 		if !ok {
 			zli.Fatalf("unknown format: %q", format)
@@ -97,7 +103,7 @@ func main() {
 
 func convert(in, out string) error {
 	// TODO
-	z18n.ReadMessages("msg.toml")
+	//z18n.ReadMessagesFromFile("msg.toml")
 	return nil
 }
 

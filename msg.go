@@ -16,6 +16,12 @@ type Msg struct {
 	bundle *Bundle
 	tag    language.Tag
 	data   P
+
+	// TODO: would be better if we would also allow:
+	//
+	//   %(varname) %[tag text]
+	//
+	// Without having to create a map.
 	oneVar bool
 
 	ID      string  // Message ID.
@@ -107,20 +113,10 @@ func (m Msg) tplTags(str string, pairs [][]int) string {
 	for _, p := range pairs {
 		start, end := p[0], p[1]
 		text := str[start+2 : end]
-		varname, text := zstring.Split2(text, " ")
-
-		// If there's just one variable the varname can be ommited.
-		if len(varname) > 0 {
-			if varname[0] == '%' {
-				varname = varname[1:]
-			}
-			if m.oneVar {
-				if len(text) > 0 {
-					text = varname + " " + text
-				} else {
-					text = varname
-				}
-			}
+		varname := ""
+		if len(text) > 0 && text[0] == '%' {
+			varname, text = zstring.Split2(text, " ")
+			varname = varname[1:]
 		}
 
 		key := varname

@@ -112,10 +112,10 @@ func (b *Bundle) Locale(langs ...string) *Locale {
 //
 // Variables currently used:
 //
-//   LANG            Default language
+//   LANGUAGES       Colon-separated list of locales
+//   LANG            Default language (one value)
 //   LC_COLLATE      Sorting collation
 //   LC_MESSAGES     Which messages to use
-//   LANGUAGES       Colon-separated list of locales
 //   LC_NUMERIC      Number formating
 //   LC_TIME         Date/time formatting
 //   LC_ALL          All of the above.
@@ -126,33 +126,35 @@ func (b *Bundle) Locale(langs ...string) *Locale {
 // LANG, and maybe one of the LC_* variables if you want to override something
 // specific.
 //
-// TODO: Most LC_* don't do anything yet. We need to add options for that.
+// TODO: LC_* variables outside of LC_ALL don't do anything; we need to add
+// options to set these values individually.
 func (b *Bundle) LocaleFromEnv() *Locale {
-	if e, ok := getLocale("LC_ALL"); ok {
+	if e, ok := getEnv("LC_ALL"); ok { // LC_ALL overrides everything.
 		return b.Locale(e)
 	}
 
-	// if e, ok := getLocale("LC_COLLATE"); ok {
-	// }
-	// if e, ok := getLocale("LC_NUMERIC"); ok {
-	// }
-	// if e, ok := getLocale("LC_TIME"); ok {
-	// }
-
-	if e, ok := getLocale("LC_MESSAGES"); ok {
-		return b.Locale(e)
-	}
-	if e, ok := getLocale("LANGUAGES"); ok {
-		return b.Locale(strings.Split(e, ":")...)
-	}
-	if e, ok := getLocale("LANG"); ok {
-		return b.Locale(e)
+	var l *Locale
+	if e, ok := getEnv("LANGUAGES"); ok {
+		l = b.Locale(strings.Split(e, ":")...)
+	} else if e, ok := getEnv("LANG"); ok {
+		l = b.Locale(e)
+	} else {
+		l = b.Locale()
 	}
 
-	return b.Locale()
+	// if e, ok := getEnv("LC_COLLATE"); ok {
+	// }
+	// if e, ok := getEnv("LC_NUMERIC"); ok {
+	// }
+	// if e, ok := getEnv("LC_TIME"); ok {
+	// }
+	// if e, ok := getEnv("LC_MESSAGES"); ok {
+	// }
+
+	return l
 }
 
-func getLocale(name string) (string, bool) {
+func getEnv(name string) (string, bool) {
 	l, ok := os.LookupEnv(name)
 	if !ok {
 		return "", false

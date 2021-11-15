@@ -53,55 +53,75 @@ Adding it to an application
 Start by creating a new bundle; a "bundle" is a set of all translations your
 application has:
 
-    b, err := NewBundle(language.English)
+```go
+b, err := NewBundle(language.English)
+```
 
 This sets the default language set to English. The "default language" is the
 "native" language of the application. I will use English here, but there is
-nothing stopping you from writing an application in Russian and translating that
-to English and/or other languages.
+nothing stopping you from writing an application in Russian and then translating
+that to English or other languages.
 
-You add messages to a bundle:
+You add messages for a language to a bundle:
 
-    b.AddMessages(language.English, map[string]Msg{
-        "insult/cow":   Msg{Default: "You fight like a dairy farmer!"},
-        "comeback/cow": Msg{Default: "How appropriate. You fight like a cow!"},
-    })
+```go
+b.AddMessages(language.English, map[string]Msg{
+    "insult/cow":   Msg{Default: "You fight like a dairy farmer!"},
+    "comeback/cow": Msg{Default: "How appropriate. You fight like a cow!"},
+})
 
-    b.AddMessages(language.Dutch, map[string]Msg{
-        "insult/cow":   Msg{Default: "Je vecht als een melkboer!"},
-        "comeback/cow": Msg{Default: "Erg toepasselijk. Je vecht als een koe!"},
-    })
+b.AddMessages(language.Dutch, map[string]Msg{
+    "insult/cow":   Msg{Default: "Je vecht als een melkboer!"},
+    "comeback/cow": Msg{Default: "Erg toepasselijk. Je vecht als een koe!"},
+})
+```
+
+There are other ways to add messages too, such as TOML or .po files. See the
+"Finding messages and creating translation files" section.
 
 Get a locale from the bundle:
 
-    l := b.Locale("nl-NL")
+```go
+l := b.Locale("nl-NL")
+```
 
 This accepts multiple languages, in order of preference, and accepts the
 contents of the `Accept-Language` HTTP header. In a real-world web app you
 usually want to do something like:
 
-    l := b.Locale(
-        r.Query.Get("lang"),
-        user.Settings.Language,
-        r.Header.Get("Accept-Language"))
+```go
+l := b.Locale(
+    r.Query.Get("lang"),
+    user.Settings.Language,
+    r.Header.Get("Accept-Language"))
+```
 
 This will prefer the manual `?lang=[..]` query parameter, or uses the user's
 settings (if set), falling back to the browser's `Accept-Language` header.
 
+*Aside: please do not use the IP address for this. As someone lived abroad for a
+few years it's a massive PITA to have things automatically be set to a language
+I don't understand. Even in the Netherlands I often just prefer the English
+version.*
+
 If you have a CLI or desktop app you can use `b.LocaleFromEnv()`; this will use
-the `LANG` and `LC_*` environment variables to construct a locale.
+the `LANG`, `LANGUAGES`, and `LC_*` environment variables to construct a locale.
 
-Note that you almost certainly want to use codes with a region tag such as
-`nl-NL` here – `nl` being the language code for Dutch, and `NL` being the region
-of the Netherlands – and not just `nl`. It will fall back to the messages for
-`nl` if there aren't any for `nl-NL` specifically, and the localisation for
-dates and such will be appropriate for this region. American and British people
-don't write their dates in the same way for example.
+You almost certainly want to use codes with a region tag such as `nl-NL` if
+possible, `nl` being the language code for Dutch, and `NL` being the region of
+the Netherlands. It will fall back to the messages for `nl` if there aren't any
+for `nl-NL` specifically, and the localisation for dates and such will be
+appropriate for this region. American and British people don't write their dates
+in the same way for example, even though they both speak English.
 
-You can use the `Locale.T` to display translated messages:
+---
 
-    fmt.Println(l.T("insult/cow"))
-    // Output: "Erg toepasselijk. Je vecht als een koe!"
+You can use `Locale.T` to display translated messages:
+
+```go
+fmt.Println(l.T("insult/cow"))
+// Output: "Erg toepasselijk. Je vecht als een koe!"
+```
 
 More details on how to translate messages in the section below.
 
@@ -112,14 +132,18 @@ based on the user settings, `Accept-Language` header, etc.
 There is also a top-level `z18n.T` which takes the Locale object from a context,
 which can be created with `z18n.With()`:
 
-    ctx := z18n.With(context.Background(), l)
-    z18n.T(ctx, "insult/cow")
+```go
+ctx := z18n.With(context.Background(), l)
+z18n.T(ctx, "insult/cow")
+```
 
 Translating messages
 --------------------
 The `T` function accepts the message ID as the first parameter:
 
-    l.T("song/coconuts")
+```go
+l.T("song/coconuts")
+```
 
 This will look up the message with the ID `song/coconuts` in this locale. If no
 such message exists in this locale then it will try to get it from the closest
@@ -134,7 +158,9 @@ bar (`|`).
 
 You can optionally specify a default message after a `|`:
 
-    l.T("song/coconuts|I've got a lovely bunch of coconuts!")
+```go
+l.T("song/coconuts|I've got a lovely bunch of coconuts!")
+```
 
 By adding both an ID *and* the message in there you get the best of both worlds:
 you can still easily find and write code without going back and forth to
@@ -142,42 +168,41 @@ translation files, but you can also freely make minor changes to the default
 message without invalidating all the translations as the message itself isn't
 used as the lookup key.
 
-You can only set the default (unpluralized) message with this right now; if you
-want a pluralized string then you will need to add the other variants as
-messages through an `Bundle.AddMessages()` call or message file (more on
-pluralisation and messages files later).
+You can only set the default (unpluralized) message with this; if you want a
+pluralized string then you will need to add the other variants as messages
+through an `Bundle.AddMessages()` call or message file (more on pluralisation
+and messages files later).
 
 The `song/` doesn't mean anything special, it's just a convention that might be
-useful. You can also use `song-coconuts`, `song#coconuts`,
+useful. You can also use `song-coconuts`, `song#coconuts`, `song coconuts`,
 `song/silly/coconuts`, or just not use any prefix at all and use only
-`coconuts`. Personally I found using prefixes useful so I'll use them in this
-documentations
+`coconuts`. Personally I found using prefixes useful as it adds a bit context
+*what* something is (e.g. `btn/accept` clarifies this is a button).
 
 ### Variables
 Variable interpolation works with `%(varname)`; the `varname` should remain
 identical in translated messages as it's used to look up the variable:
 
-    l.T("spam|Spam %(email) at your own risk; I will hunt you down!", email)
+```go
+l.T("spam|Spam %(email) at your own risk; I will hunt you down!", email)
+```
 
 If you have only one variable then you can pass it as just an argument, but if
 if you have more than one you will need to use a map:
 
-    l.T("spam|Spam %(email) or %(email2) at your own risk; I will hunt you down!", z18n.P{
-        "email":  email,
-        "email2": email2,
-    })
+```go
+l.T("spam|Spam %(email) or %(email2) at your own risk; I will hunt you down!", z18n.P{
+    "email":  email,
+    "email2": email2,
+})
+```
 
 The reason for this is that the position of the variables might be different in
-translated messages. With one variable this isn't an issue and since most
+translated messages. With one variable this isn't an issue and since many
 messages will likely have just one variable it's a useful "shortcut" to have.
 
 Variable names can contain any character except whitespace and any of `%()[]|`.
 After a space you can add one or more format specifiers:
-
-    %(word upper_first)         Format in upper case.
-    %(word lower upper_first)   Format in lower case, and then upper-case the first letter.
-
-Supported specifiers:
 
     lower, upper    Lower or uppercase everything.
     upper_first     Uppercase the first letter, leaving the rest of the case intact.
@@ -202,13 +227,20 @@ Supported specifiers:
     [..]            Any other text for a time.Time is taken as a format string
                     for time.Format.
 
+For example:
+
+    %(word upper_first)         Format in upper case.
+    %(word lower upper_first)   Format in lower case, and then upper-case the first letter.
+
+
 See the "Localisation of dates, numbers" section below for more details on
 number and date formatting.
 
 Variable values are always HTML-escaped by default unless you set `NoHTML` in
 the `Bundle`. You almost certainly want to set this for CLI and desktop apps,
 it's enabled by default as forgetting to do so for webapps can be potentially
-disastrous, whereas it "only" looks wrong for a CLI or desktop app.
+disastrous, whereas it "only" looks wrong for a CLI or desktop app (but isn't
+dangerous).
 
 ### HTML tags
 Use `%[varname text]` as a placeholder for HTML tags; this is intended to be
@@ -216,58 +248,62 @@ used with the `z18n.Tag()` function and removes the need for most – if not all
 HTML inside translation strings, and makes stuff easier to read and HTML easier
 to update:
 
-    l.T("video/goat|Look at %[cute video] of a farting goat!")
-        z18n.Tag("a", `href="/goat.mp4" class="link"`))
+```go
+l.T("video/goat|Look at %[cute video] of a farting goat!")
+    z18n.Tag("a", `href="/goat.mp4" class="link"`))
+```
 
 Everything inside the `%[..]` tag is text that should be translated. The
 `z18n.Tag` function controls which HTML gets added; the first parameter (`a`) is
 the tag name, and the second whatever you want to put in the opening tag; this
 is added without processing and is **not safe** against untrusted input.
 
-The first word after `%[` is the variable name; `link` in this case. 
-
 As with `%(..)` variables you can pass it as just an argument if you have only
 one value, but will need to use a map and add a variable if you use multiple
 variables and/or tags:
 
-    l.T("video/goat|Look at %[%link cute video] of a farting %[%bold goat]!", z18n.P{
-        "link": z18n.Tag("a", `href="/goat.mp4" class="link"`),
-        "bold": z18n.Tag("strong", ``),
-    })
+```go
+l.T("video/goat|Look at %[%link cute video] of a farting %[%bold goat]!", z18n.P{
+    "link": z18n.Tag("a", `href="/goat.mp4" class="link"`),
+    "bold": z18n.Tag("strong", ``),
+})
+```
 
-The first word starting with `%` is the variable name; the `%` is added to
-distinguish between a variable name and a regular word.
+If the first word starts with `%` it's taken as the variable name; the `%` is
+added to distinguish between a variable name and a regular word.
 
-Variables can be used inside `%[..]` tags:
+You can use variables inside `%[..]` tags:
 
-    l.T("email/goat|You can %[link email the goat at %(email)] for requests", z18n.P{
-        "link":  z18n.Tag("a", `href="mailto:TheFlatulentGoat@example.com"`),
-        "email": email,
-    })
+```go
+l.T("email/goat|You can %[%link email the goat at %(email)] for requests", z18n.P{
+    "link":  z18n.Tag("a", `href="mailto:TheFlatulentGoat@example.com"`),
+    "email": email,
+})
+```
 
-It's not possible to nest these tags: `%[one %[two tags]]` won't work. You can
+It's not possible to nest these tags: `%[%one %[%two tags]]` won't work. You can
 create your own type which implements the `z18n.Tagger` interface if you need
-some more complex HTML.
+more complex HTML.
 
-In some cases there isn't any text to be translated; in which case you can use:
+In some cases there isn't any text to be translated; in which case you can use
+the third parameter to set the innerHTML and use just a variable name:
 
-    l.T("email/goat|Or phone the goat at %[phone].",
-        z18n.Tag("a", `href="tel:5554242"`, "555-42 42))
-
-Or you can use `%(..)` in this case as well, which has the same effect:
-
-    l.T("email/goat|Or phone the goat at %(phone).",
-        z18n.Tag("a", `href="tel:5554242"`, "555-42 42))
+```go
+l.T("email/goat|Or phone the goat at %(phone).",
+    z18n.Tag("a", `href="tel:5554242"`, "555-42 42))
+```
 
 ### Localisation of dates, numbers
 Numbers (all `int` and `float` types) and `time.Time` will be formatted
 according to the locale, for example:
 
-    l.T("test|The genetic test I did on %(t) showed I'm %(f)% platypus; a trait %(n) people share", z18n.P{
-        "t": time.Now(),
-        "f": 13.42,
-        "n": 51341,
-    })
+```go
+l.T("test|The genetic test I did on %(t) showed I'm %(f)% platypus; a trait %(n) people share", z18n.P{
+    "t": time.Now(),
+    "f": 13.42,
+    "n": 51341,
+})
+```
 
 This will print the following for the en-US, en-NZ, and nl-NL locales:
 
@@ -278,13 +314,15 @@ This will print the following for the en-US, en-NZ, and nl-NL locales:
 We can add some format specifiers to the variables to control how it's printed;
 for example adding `0` to the float to and `short date` to the time:
 
-    l.T("test|The genetic test I did on %(t short date) showed I'm %(f 0)% platypus; a trait %(n) people share", z18n.P{
-        "t": time.Now(),
-        "f": 13.42,
-        "n": 51341,
-    })
+```go
+l.T("test|The genetic test I did on %(t short date) showed I'm %(f 0)% platypus; a trait %(n) people share", z18n.P{
+    "t": time.Now(),
+    "f": 13.42,
+    "n": 51341,
+})
+```
 
-Will prints
+Will print:
 
     The genetic test I did on Saturday, June 12, 2021 showed I'm 13% platypus; a trait 51,341 people share
     The genetic test I did on Saturday, 12 June 2021 showed I'm 13% platypus; a trait 51,341 people share
@@ -294,30 +332,30 @@ Dates can be printed as "datetime" (the default), "date", or "time", all of them
 in a "full" "long", "medium", or "short" format. How exactly it's printed
 differs per language; a few examples of how it roughly looks:
     
-                        en-US                       nl-NL
+                            en-US                       nl-NL
 
-    %(d)                Jan 02, 2006 2:22 pm        2 Jan 2006 14:22
-    %(d short)          02/01/06 2:22 pm            01-02-2006 14:22
-    %(d long)           January 2, 2006 2:22 pm     2 January 2006 14:22
+        %(d)                Jan 02, 2006 2:22 pm        2 Jan 2006 14:22
+        %(d short)          02/01/06 2:22 pm            01-02-2006 14:22
+        %(d long)           January 2, 2006 2:22 pm     2 January 2006 14:22
 
     Or print just the date:
-    %(d date)           02/01/06                    01-02-2006
-    %(d date short)     January 2, 2006             2 January 2006
-    %(d date long)      January 2, 2006             2 January 2006
+        %(d date)           02/01/06                    01-02-2006
+        %(d date short)     January 2, 2006             2 January 2006
+        %(d date long)      January 2, 2006             2 January 2006
 
     Just the time
-    %(d time)           2:22                        14:22
+        %(d time)           2:22                        14:22
 
     Extract specific parts:
-    %(d day)            Monday              Maandag
-    %(d month)          March               Maart
+        %(d day)            Monday                      Maandag
+        %(d month)          March                       Maart
 
     Or use a custom format:
-    %(d 2006-01-02)     2006-01-02          2006-01-02
+        %(d 2006-01-02)     2006-01-02                  2006-01-02
 
-Things like ordinals, formatting of bytes, etc. aren't implemented (yet anyway).
+Things like ordinals, formatting of bytes, etc. aren't implemented (yet).
 
-Use the `raw` function in variables to prevent formatting and just use
+Use the `raw` function in variables to prevent formatting and format it as
 `fmt.Sprintf("%v")`:
 
     l.T("id|number: %(n raw); float: %(f raw); time: %(t raw)", z18n.P{
@@ -327,6 +365,8 @@ Use the `raw` function in variables to prevent formatting and just use
     })
 
 ---
+
+<!-- TODO: unimplemented.
 
 The formats can be overridden for a locale, in case the user set something
 different. You usually want to provide some feature for this: there are probably
@@ -365,6 +405,7 @@ For CLI and desktop apps this is easy, as you can use the system's locale;
     // Thousands and fraction separators.
     l.Thousands('.')
     l.Fraction('.')
+-->
 
 ### Plurals
 Thus far we've only set `Msg.Default`; this is the message to use if there are
@@ -373,7 +414,8 @@ no pluralisations to apply; there are five other messages:
     One, Zero, Two, Few, Many
 
 z18n will use one of these (or the `Default`) automatically when supplied with a
-`Plural` value. Leaving the appropriate value empty will result in an error.
+`Plural` value. Leaving the appropriate value empty in the message file will
+result in an error.
 
 The exact meaning of these vary per language, and most languages don't have all
 of them. The logic for all of this can actually be quite complex and often
@@ -385,54 +427,60 @@ have a Ph.D. in math embedded in their DNA][pl].
 
 To add Plurals to the messages use the appropriate field(s):
 
-    b.AddMessages(language.BritishEnglish, map[string]Msg{
-        "ants!": Msg{
-            One:   "Help, I've got an ant in my trousers!"
-            Default: "Help, I've got %(n) ants in my trousers!"
-        },
-    })
+```go
+b.AddMessages(language.BritishEnglish, map[string]Msg{
+    "ants!": Msg{
+        One:   "Help, I've got an ant in my trousers!"
+        Default: "Help, I've got %(n) ants in my trousers!"
+    },
+})
 
-    b.AddMessages(language.AmericanEnglish, map[string]Msg{
-        "ants!": Msg{
-            One:     "Help, I've got an ant in my pants!",
-            Default: "Help, I've got %(n) ants in my pants!",
-        },
-    })
+b.AddMessages(language.AmericanEnglish, map[string]Msg{
+    "ants!": Msg{
+        One:     "Help, I've got an ant in my pants!",
+        Default: "Help, I've got %(n) ants in my pants!",
+    },
+})
 
-    b.AddMessages(language.Indonesian, map[string]Msg{
-        "ants!": Msg{
-            // You can probably get away with just "Default" here; there is no
-            // grammatical difference other than not putting the %(n) in there.
-            One:     "Tolong, saya punya semut di celana saya! ",
-            Default: "Tolong, saya punya %(n) semut di celana saya!",
-        },
-    })
+b.AddMessages(language.Indonesian, map[string]Msg{
+    "ants!": Msg{
+        // You can probably get away with just "Default" here; there is no
+        // grammatical difference other than not putting the %(n) in there.
+        One:     "Tolong, saya punya semut di celana saya! ",
+        Default: "Tolong, saya punya %(n) semut di celana saya!",
+    },
+})
 
-    b.AddMessages(language.Polish, map[string]Msg{
-        "ants!": Msg{
-            One:  "Pomocy, mam mrówkę w spodniach!",
-            Two:  "Pomocy, mam %(n) mrówki w spodniach! ",:
-            Few:  "Pomocy, mam %(n) mrówek w spodniach! ",:
-            Many: "Pomocy, mam w spodniach %(n) mrówek!",:
-        },
-    })
+b.AddMessages(language.Polish, map[string]Msg{
+    "ants!": Msg{
+        One:  "Pomocy, mam mrówkę w spodniach!",
+        Two:  "Pomocy, mam %(n) mrówki w spodniach! ",:
+        Few:  "Pomocy, mam %(n) mrówek w spodniach! ",:
+        Many: "Pomocy, mam w spodniach %(n) mrówek!",:
+    },
+})
+```
 
 Pass a `z18n.Plural` to `z18n.T` to tell z18n which form to use; `z18n.N()`
 conveniently creates this without too much noise:
 
-    l.T("ants!", z18n.N(5))
+```go
+l.T("ants!", z18n.N(5))
+```
 
 This can be in any position and will automatically be made available as the
 variable `n`, and can of course be combined with other variables:
 
-    b.AddMessages(language.BritishEnglish, map[string]Msg{
-        "marketers": Msg{
-            One:     "I emailed %(email) only once with my stupid marketing offer, so better send 5 more emails"
-            Default: "I emailed %(email) %(n) times with my stupid marketing offers",
-        },
-    })
+```go
+b.AddMessages(language.BritishEnglish, map[string]Msg{
+    "marketers": Msg{
+        One:     "I emailed %(email) only once with my stupid marketing offer, so better send 5 more emails"
+        Default: "I emailed %(email) %(n) times with my stupid marketing offers",
+    },
+})
 
-    l.T("marketers", z18n.N(5), email)
+l.T("marketers", z18n.N(5), email)
+```
 
 Note that in CLDR "Default" is named "Other". I renamed this as I thought it
 made more sense, especially since most messages don't have any
@@ -443,7 +491,8 @@ plurals/translations setting "Other" seems kinda weird.
 
 ### Adding context
 It's often useful for translators to have some clue what exactly a string refers
-to. Generally speaking, the shorter the string, the more useful this context is.
+to. Generally speaking, the shorter the string, the more useful adding context
+is. 
 
 There are two ways to add context; the first is in the message ID; for example:
 
@@ -451,58 +500,72 @@ There are two ways to add context; the first is in the message ID; for example:
 
 This makes it clear that "get" is used as a form button to get a quote. This may
 be important, because words like "get" can sometimes be translated in multiple
-ways, and not all of them may be appropriate in this context. This is one reason
-I like using prefixes, because now it's pretty clear that this is a button that
-*does* something (but you can also use `get-quote-button` or some other
-variation, if you prefer).
+ways, and not all of them may be appropriate in this context. For example one
+product I worked one had "Get [product-name]" translated in such a way where
+"get" meant "to contract" (as in, "contract the flu"). Funny? Yes. A good
+translation? Not really.
+
+This is one reason I like using prefixes, because now it's pretty clear that
+this is a button that *does* something (but you can also use `get-quote-button`
+or some other variation, if you prefer).
 
 A second way is to use special comments:
 
-    // z18n: Context
-    // Context continues.
-    l.T("button/get-quote|Get")
+```go
+// z18n: Context
+// Context continues.
+l.T("button/get-quote|Get")
+```
 
 Or:
 
-    /* z18n: Context
-       Context continues. */
-    l.T("button/get-quote|Get")
+```go
+/* z18n: Context
+   Context continues. */
+l.T("button/get-quote|Get")
+```
 
 Or:
 
-    l.T("button/get-quote|Get") // z18n: some context
-    l.T("button/get-quote|Get") /* z18n: some context */
+```go
+l.T("button/get-quote|Get") // z18n: some context
+l.T("button/get-quote|Get") /* z18n: some context */
+```
 
-I generally I would recommend avoiding this unless necessary; good ids are
-better. But sometimes even with descriptive IDs it's useful to add some extra
-context.
+I would recommend avoiding this unless necessary; good ids are better. But
+sometimes even with descriptive IDs it's useful to add some extra context.
 
 The comments *need* to be prefixed with `z18n:` and immediately precede the `T`
 call. This **won't** work:
 
-    // z18n: there is a blank like.
+```go
+// z18n: there is a blank like.
 
-    l.T("button/get-quote|Get")
+l.T("button/get-quote|Get")
 
-    // z18n There is no ":" after z18n.
-    l.T("button/get-quote|Get")
+// z18n There is no ":" after z18n.
+l.T("button/get-quote|Get")
 
-    //z18n: there is no space after //
-    l.T("button/get-quote|Get")
+//z18n: there is no space after //
+l.T("button/get-quote|Get")
 
-    l.T("button/get-quote|Get")
-    // z18n: This is on the next line.
+l.T("button/get-quote|Get")
+// z18n: This is on the next line.
+```
 
 
 Using from templates
 --------------------
-You can add `z18n.Thtml` to the template function list:
+Using z18n from {text,html}/template is a first-class use case; you'll need to
+add a few functions:
 
-    tplfunc := template.FuncMap{
-        "t":   z18n.Thtml,
-        "tag": z18n.Tag,
-        "n":   z18n.N,
-    }
+```go
+tplfunc := template.FuncMap{
+    "t":   z18n.Thtml,
+    "tag": z18n.Tag,
+    "n":   z18n.N,
+}
+```
 
 And then use:
 
@@ -518,12 +581,14 @@ will be collapsed to a single space, so multi-line messages work well:
 The downside of this is that you need to pass the context every time. You can
 create a "scoped" version by assigning a variable:
 
-    b := NewBundle(...)
-    l := b.Locale()
+```go
+b := NewBundle(...)
+l := b.Locale()
 
-    tpl.ExecuteTemplate("foo.gohtml", struct {
-        T func(string, ...interface{}) template.HTML
-    }{l.T})
+tpl.ExecuteTemplate("foo.gohtml", struct {
+    T func(string, ...interface{}) template.HTML
+}{l.T})
+```
 
 And then use it like:
 
@@ -544,10 +609,12 @@ is in the backend with just a few messages in the frontend. The general strategy
 would be to render the messages you need server-side and then load them in JS. A
 simple example:
 
-    <span id="z18n" style="display: none"
-        data-msg-one="{{.T "id/msg"}}
-        data-msg-two="{{.T "id/msg"}}
-    ></span>
+```html
+<span id="z18n" style="display: none"
+    data-msg-one="{{.T "id/msg"}}
+    data-msg-two="{{.T "id/msg"}}
+></span>
+```
 
 And then get it from `#z18n` on init or when needed.
 
@@ -567,36 +634,44 @@ Finding messages and creating translation files
 -----------------------------------------------
 The `./cmd/z18n` tool can find messages in Go and template files.
 
-The simplest usage is:
+To find all messages in the current directory:
 
-    $ z18n ./...
+    % z18n find
 
-This will scan for Go files and templates. See `-help` for various options.
+This will scan for Go files and templates. See `z18n help` for various options.
 
 There are a few output types:
 
-    JSON, TOML, YAML    Load from the filesystem (or with Go embed)
+    json, toml  yaml    Load from the filesystem (or with Go embed)
     Go                  Go files, compiled directly in the application.
-    po                  Gettext-compatible; use as there are many translation tools for it.
-    SQL                 SQL for loading from a database. The built-in translation tool uses this.
+    po                  Gettext-compatible; useful as there are many translation tools for it.
+    sql                 SQL for loading from a database. The built-in translation tool uses this.
 
 All formats can be freely converted with `z18n convert`, so you can always
 change your mind later.
 
+To load messages from a JSON, TOML, YAML or PO file use `ReadMessages()`:
+
+```go
+err := b.ReadMessages(fsys, language.Dutch, "file.toml")
+
+// Or:
+
+err := b.ReadMessagesFromFile(language.Dutch, "file.toml")
+```
+
+<!--
 If you use Go files you just need to call the function:
 
     TODO: language tag should be in the file/struct; we need a different API for
     this, or maybe just store it in msg package.
     b.AddMessages(language.Dutch, msg.NL_NL())
 
-For JSON,, TOML, YAML, and po files call:
-
-    err := b.ReadMessages(language.Dutch, "file.toml")
-
 And for SQL:
 
     conn := sql.Open(..)
     err := b.FromSQL(conn)
+-->
 
 
 Accepting translations and updates from translators

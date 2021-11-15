@@ -1,10 +1,13 @@
 package z18n
 
 import (
+	"os"
+	"reflect"
 	"testing"
 	"time"
 
 	"golang.org/x/text/language"
+	"zgo.at/zstd/zstring"
 )
 
 func mkbundle() *Bundle {
@@ -157,7 +160,6 @@ func TestT(t *testing.T) {
 	}
 
 	b := mkbundle()
-
 	en := b.Locale("en-NZ")
 	nl := b.Locale("nl-NL")
 
@@ -288,6 +290,50 @@ func TestCascade(t *testing.T) {
 
 	// 123, in latin
 	// message.NewPrinter(tag).Printf("%f\n", number.Decimal(123))
+}
+
+func TestLocaleFromEnv(t *testing.T) {
+	b := mkbundle()
+	env := os.Environ()
+	restore := func() {
+		os.Clearenv()
+		for _, e := range env {
+			k, v := zstring.Split2(e, "=")
+			err := os.Setenv(k, v)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	nz, nl, id := language.MustParse("en-NZ"), language.MustParse("nl-NL"), language.MustParse("id-ID")
+
+	tests := []struct {
+		env  map[string]string
+		want []language.Tag
+	}{
+		{map[string]string{}, []language.Tag{nz}},
+		{map[string]string{"LANG": "nl-NL"}, []language.Tag{nl, nz}},
+		{map[string]string{"LC_ALL": "nl-NL"}, []language.Tag{nl, nz}},
+		{map[string]string{"LC_ALL": "id-ID", "LC_MESSAGES": "nl-NL"}, []language.Tag{id, nz}},
+		{map[string]string{"LANGUAGES": "nl-NL:id-ID"}, []language.Tag{nl, id, nz}},
+	}
+
+	for _, tt := range tests {
+		t.Run("", func(t *testing.T) {
+			defer restore()
+
+			os.Clearenv()
+			for k, v := range tt.env {
+				os.Setenv(k, v)
+			}
+
+			l := b.LocaleFromEnv()
+			if !reflect.DeepEqual(l.tags, tt.want) {
+				t.Errorf("\nhave: %s\nwant: %s", l.tags, tt.want)
+			}
+		})
+	}
 }
 
 func BenchmarkNew(b *testing.B) {

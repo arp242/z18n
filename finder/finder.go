@@ -25,8 +25,9 @@ import (
 
 type (
 	Entry struct {
-		ID, Default string
-		Loc         []string
+		ID      string   `json:"id" toml:"id" yaml:"id"`
+		Default string   `json:"default" toml:"default" yaml:"default"`
+		Loc     []string `json:"loc" toml:"loc" yaml:"loc"`
 	}
 	Entries map[string]Entry
 )
@@ -88,7 +89,7 @@ func (e Entries) TOML() (string, error) {
 // JSON formats all entries as JSON.
 func (e Entries) JSON() (string, error) {
 	j, err := json.MarshalIndent(e, "", "    ")
-	return string(j), err
+	return string(j) + "\n", err
 }
 
 // SQL formats all entries as SQL.
@@ -99,7 +100,7 @@ func (e Entries) SQL() (string, error) {
 	//   other    varchar
 	// );
 	// TODO
-	return "", nil
+	return "TODO: not yet implemented.\n", nil
 }
 
 // Go formats all entries as a Go file.
@@ -136,10 +137,16 @@ func (e Entries) Go() (string, error) {
 	return string(src), nil
 }
 
-// Gettext formats all entries as gettext msg files.
-func (e Entries) Gettext() (string, error) {
+// Po formats all entries as gettext msg files.
+func (e Entries) Po() (string, error) {
 	// TODO
-	return "", nil
+	return "TODO: not yet implemented.\n", nil
+}
+
+// YAML formats all entries as YAML.
+func (e Entries) YAML() (string, error) {
+	// TODO
+	return "TODO: not yet implemented.\n", nil
 }
 
 // Go finds all translatable strings in pattern.
@@ -246,7 +253,7 @@ func Template(pattern string, ext []string, funs ...string) (Entries, error) {
 
 		tree, err := parse.Parse("", string(data), parse.ParseRelaxFunctions, "{{", "}}")
 		if err != nil {
-			return err
+			return fmt.Errorf("parsing %q: %w", path, err)
 		}
 
 		parse.Visit(tree[""].Root, func(n parse.Node, _ int) bool {
