@@ -2,7 +2,6 @@ package z18n
 
 import (
 	"io/fs"
-	"os"
 
 	"github.com/BurntSushi/toml"
 	"golang.org/x/text/language"
@@ -11,35 +10,47 @@ import (
 	"zgo.at/zstd/zfilepath"
 )
 
-func (b *Bundle) ReadMessagesFromFile(lang language.Tag, file string) error {
-	return b.ReadMessages(os.DirFS("."), lang, file)
+func (b *Bundle) ReadMessagesFromDir(fsys fs.FS, glob string) error {
+	ls, err := fs.Glob(fsys, glob)
+	if err != nil {
+		return errors.Wrap(err, "Bundle.ReadMessagesFromDir")
+	}
+
+	for _, f := range ls {
+		err := b.ReadMessages(fsys, f)
+		if err != nil {
+			return errors.Wrapf(err, "Bundle.ReadMessagesFromDir: %q", f)
+		}
+	}
+	return nil
 }
 
-func (b *Bundle) ReadMessages(fsys fs.FS, lang language.Tag, file string) error {
-	_, ext := zfilepath.SplitExt(file)
+func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
+	_, ext := zfilepath.SplitExt(path)
 	var (
-		m   map[string]finder.Entry
-		err error
+		file finder.File
+		err  error
 	)
 	switch ext {
 	default:
-		return errors.Errorf("unknown file type: %q", ext)
+		return errors.Errorf("Bundle.ReadMessages: unknown file type: %q", ext)
 	case "toml":
-		_, err = toml.DecodeFS(fsys, file, &m)
-	case "json":
-		// TODO
-	case "yaml":
-		// TODO
-	case "go":
-		// TODO
-	case "po":
-		// TODO
+		_, err = toml.DecodeFS(fsys, path, &file)
 	}
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Bundle.ReadMessages: decode")
 	}
 
-	for k, v := range m {
+	if file.BaseFile {
+		return nil
+	}
+
+	lang, err := language.Parse(file.Language)
+	if err != nil {
+		return errors.Wrapf(err, "Bundle.ReadMessages: parse language %q", file.Language)
+	}
+
+	for k, v := range file.Strings {
 		b.AddMessages(lang, map[string]Msg{
 			k: Msg{
 				ID:      k,

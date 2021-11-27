@@ -364,9 +364,9 @@ Use the `raw` function in variables to prevent formatting and format it as
         "t": time.Now(),
     })
 
----
-
 <!-- TODO: unimplemented.
+
+---
 
 The formats can be overridden for a locale, in case the user set something
 different. You usually want to provide some feature for this: there are probably
@@ -488,7 +488,6 @@ plurals/translations setting "Other" seems kinda weird.
 
 [pl]: plural/rule_gen.go#344
 
-
 ### Adding context
 It's often useful for translators to have some clue what exactly a string refers
 to. Generally speaking, the shorter the string, the more useful adding context
@@ -553,7 +552,6 @@ l.T("button/get-quote|Get")
 // z18n: This is on the next line.
 ```
 
-
 Using from templates
 --------------------
 Using z18n from {text,html}/template is a first-class use case; you'll need to
@@ -561,9 +559,9 @@ add a few functions:
 
 ```go
 tplfunc := template.FuncMap{
-    "t":   z18n.Thtml,
-    "tag": z18n.Tag,
-    "n":   z18n.N,
+    "t":      z18n.Thtml,
+    "tag":    z18n.Tag,
+    "plural": z18n.N,
 }
 ```
 
@@ -634,65 +632,38 @@ Finding messages and creating translation files
 -----------------------------------------------
 The `./cmd/z18n` tool can find messages in Go and template files.
 
-To find all messages in the current directory:
+To find all messages in the current directory and all subdirectories:
 
     % z18n find
 
 This will scan for Go files and templates. See `z18n help` for various options.
 
-There are a few output types:
+    % z18n find > i18n/base.toml
 
-    json, toml  yaml    Load from the filesystem (or with Go embed)
-    Go                  Go files, compiled directly in the application.
-    po                  Gettext-compatible; useful as there are many translation tools for it.
-    sql                 SQL for loading from a database. The built-in translation tool uses this.
+To translate something, copy `i18n/base.toml` to `i18n/file.toml`, edit the
+information in the `__meta__` key, and start translating!
 
-All formats can be freely converted with `z18n convert`, so you can always
-change your mind later.
-
-To load messages from a JSON, TOML, YAML or PO file use `ReadMessages()`:
+To load messages from `ReadMessages()`:
 
 ```go
-err := b.ReadMessages(fsys, language.Dutch, "file.toml")
+err := b.ReadMessages(os.DirFS("i18n"), "file.toml")
 
-// Or:
-
-err := b.ReadMessagesFromFile(language.Dutch, "file.toml")
+// Or all files in a directory:
+err := b.ReadMessagesFromDir(os.DirFS("i18n"), "*.toml")
 ```
 
-<!--
-If you use Go files you just need to call the function:
+---
 
-    TODO: language tag should be in the file/struct; we need a different API for
-    this, or maybe just store it in msg package.
-    b.AddMessages(language.Dutch, msg.NL_NL())
+For updating use the `update` command:
 
-And for SQL:
+    % z18n update i18n/base.toml i18n/*.toml
 
-    conn := sql.Open(..)
-    err := b.FromSQL(conn)
--->
+The first file is the "base" file, and all other files are translation files.
+This will re-scan the project, add new translation entries, comment out entries
+that no longer exist, and mark entries where the default has changed.
 
-
-Accepting translations and updates from translators
----------------------------------------------------
-You can:
-
-- Send people the "raw" files with the English strings so they can translate it
-  (TOML is probably the easiest). Probably works well for more tech-y people.
-
-- Use the built-in web interface.
-
-- Generate .po files and use one of the many frontends for that.
-
-After an update:
-
-- Generate a new base file
-- Merge with existing translation file
-- Send to translator
-- Replace file
-
-
+The options used in "z18n find" are stored in the base file, so you don't need
+to add them again.
 
 Other tidbits
 -------------
