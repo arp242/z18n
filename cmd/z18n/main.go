@@ -31,12 +31,12 @@ Commands:
                                                 for verifying/auditing strings.
 
                     -fun        Function names, separated by a comma.
-                                Default: "z18n.T,z18n.Locale.T,T".
+                                Default is "T".
 
                     -tpl-ext    Extensions for templates; default is "gohtml"
                                 and "gotxt". Can be given more than once.
 
-                    -tpl-fun    Template functions; default is "t,.T"
+                    -tpl-fun    Template functions; default is "t" and ".T".
 
     update  Update message files
 

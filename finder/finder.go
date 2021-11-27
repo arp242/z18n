@@ -209,10 +209,15 @@ func (e Entries) toml() (string, error) {
 //
 // TODO: find context from comments too.
 func Go(dir string, funs ...string) (Entries, error) {
+	p := dir
+	if p == "" || p == "." {
+		p = "./..."
+	}
+
 	pkgs, err := packages.Load(&packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedTypes | packages.NeedSyntax,
 		Dir:  dir,
-	}, dir)
+	}, p)
 	if err != nil {
 		return nil, errors.Wrap(err, "finder.Go")
 	}
@@ -245,7 +250,7 @@ func Go(dir string, funs ...string) (Entries, error) {
 					name = f.Name
 				case *ast.SelectorExpr:
 					name = f.Sel.Name
-				case *ast.FuncLit, *ast.ArrayType:
+				case *ast.FuncLit, *ast.ArrayType, *ast.ParenExpr, *ast.CallExpr:
 					return true // No work.
 				default:
 					pos := p.Fset.Position(c.Pos())
