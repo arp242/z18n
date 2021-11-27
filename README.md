@@ -1,16 +1,3 @@
-**Note**: this library is useful, functional, and in production use. However,
-there are still some rough edges and not everything documented in this README is
-implemented yet; translating messages is fairly complete, some additional things
-like managing messages files less so. This README doubles as a design document
-how it *ought* to be rather than what it is today.
-
-It's published as I want/need to use it, and this is easier than managing
-vendored stuff and such.
-
-Caveat emptor!
-
-----
-
 z18n is a i18n library for Go. It can be used to translate Go applications
 and/or localize various aspects such as dates and numbers.
 
@@ -29,6 +16,8 @@ syntax for HTML tags, localisation of dates and numbers, various different
 message formats (Go source files, Gettext .po files, SQL, TOML, YAML, JSON), and
 includes a web interface to translate messages.
 
+[go-i18n]: https://github.com/nicksnyder/go-i18n
+
 README index:
 
 - [Adding it to an application](#adding-it-to-an-application)
@@ -37,16 +26,14 @@ README index:
   - [HTML tags](#html-tags)
   - [Localisation of dates, numbers](#localisation-of-dates-numbers)
   - [Plurals](#plurals)
+<!--
   - [Adding context](#adding-context)
+-->
 - [Using from templates](#using-from-templats)
 - [JavaScript](#javascript)
 - [Finding messages and creating translation files](#finding-messages-and-creating-translation-files)
 - [Accepting translations and updates from translators](#accepting-translations-and-updates-from-translators)
 - [Other tidbits](#other-tidbits)
-
-[go-i18n]: https://github.com/nicksnyder/go-i18n
-[gc]: https://www.goatcounter.com
-[ngi]: https://nlnet.nl/PET/
 
 Adding it to an application
 ---------------------------
@@ -488,6 +475,7 @@ plurals/translations setting "Other" seems kinda weird.
 
 [pl]: plural/rule_gen.go#344
 
+<!-- TODO: doesn't work yet
 ### Adding context
 It's often useful for translators to have some clue what exactly a string refers
 to. Generally speaking, the shorter the string, the more useful adding context
@@ -551,6 +539,7 @@ l.T("button/get-quote|Get")
 l.T("button/get-quote|Get")
 // z18n: This is on the next line.
 ```
+-->
 
 Using from templates
 --------------------
@@ -665,9 +654,11 @@ that no longer exist, and mark entries where the default has changed.
 The options used in "z18n find" are stored in the base file, so you don't need
 to add them again.
 
+<!--
 Other tidbits
 -------------
 
 TODO: mention log here.
 
 TODO: mention marking variables.
+-->

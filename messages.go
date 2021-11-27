@@ -41,6 +41,7 @@ func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
 		return errors.Wrap(err, "Bundle.ReadMessages: decode")
 	}
 
+	// Basefile is not intended for translations.
 	if file.BaseFile {
 		return nil
 	}

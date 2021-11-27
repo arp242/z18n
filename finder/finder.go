@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
-	"go/printer"
 	"go/token"
 	"io/fs"
 	"os"
@@ -24,24 +23,33 @@ import (
 )
 
 type (
+	// Entry is a single translatable entry.
 	Entry struct {
 		ID      string   `toml:"-"`
 		Loc     []string `toml:"loc"`
 		Default string   `toml:"default"`
 		Removed bool     `toml:"-"`
 	}
+
+	// Entries are a list of translatable entries.
 	Entries map[string]Entry
 
+	// File is a translation file.
 	File struct {
-		Path        string                 `toml:"-"`
 		BaseFile    bool                   `toml:"base-file"`
 		Generated   time.Time              `toml:"generated"`
 		Language    string                 `toml:"language"`
 		Maintainers []string               `toml:"maintainers"`
 		Options     map[string]interface{} `toml:"options"`
 		Strings     Entries                `toml:"-"`
+		Path        string                 `toml:"-"`
 	}
 )
+
+// List all entries in this file.
+func (f File) List() (string, error) {
+	return f.Strings.list()
+}
 
 func (f *File) UnmarshalTOML(d interface{}) error {
 	m := d.(map[string]interface{})
@@ -92,10 +100,10 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 	return nil
 }
 
-func (f File) List() (string, error) {
-	return f.Strings.List()
-}
-
+// TOML formats all entries as TOML.
+//
+// TODO: using the TOML encoder would be better, but it doesn't support the
+// options we want for formatting things (yet).
 func (f File) TOML() (string, error) {
 	meta := map[string]interface{}{
 		"generated": f.Generated,
@@ -114,7 +122,7 @@ func (f File) TOML() (string, error) {
 		return "", err
 	}
 
-	t, err := f.Strings.TOML()
+	t, err := f.Strings.toml()
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +130,7 @@ func (f File) TOML() (string, error) {
 	return b.String() + "\n" + t, nil
 }
 
-// Merge strings from src in to dst.
+// Merge strings from src in to this Entries.
 func (e Entries) Merge(src Entries) {
 	for k, v := range src {
 		have, ok := e[k]
@@ -146,7 +154,7 @@ func (e Entries) Sorted() []Entry {
 }
 
 // List all messages, one per line, without context.
-func (e Entries) List() (string, error) {
+func (e Entries) list() (string, error) {
 	max := 0
 	for _, x := range e {
 		if l := utf8.RuneCountInString(x.ID); l > max {
@@ -161,11 +169,7 @@ func (e Entries) List() (string, error) {
 	return b.String(), nil
 }
 
-// TOML formats all entries as TOML.
-//
-// TODO: using the TOML encoder would be better, but it doesn't support the
-// options we want for formatting things (yet).
-func (e Entries) TOML() (string, error) {
+func (e Entries) toml() (string, error) {
 	b := new(strings.Builder)
 	// err := toml.NewEncoder(b).Encode(e)
 	// return b.String(), err
@@ -184,31 +188,33 @@ func (e Entries) TOML() (string, error) {
 		}
 
 		fmt.Fprintf(b, "%s[%s]\n", cmt, tomlString(x.ID))
-		fmt.Fprintf(b, "%s  loc = [\n", cmt)
-		for _, l := range x.Loc {
-			fmt.Fprintf(b, "%s    %s,\n", cmt, tomlString(l))
+		switch len(x.Loc) {
+		case 0: /// Should never happen, but just in case.
+			fmt.Fprintf(b, "%s  loc     = []\n", cmt)
+		case 1:
+			fmt.Fprintf(b, "%s  loc     = [%s]\n", cmt, tomlString(x.Loc[0]))
+		default:
+			fmt.Fprintf(b, "%s  loc     = [\n", cmt)
+			for _, l := range x.Loc {
+				fmt.Fprintf(b, "%s    %s,\n", cmt, tomlString(l))
+			}
+			fmt.Fprintf(b, "%s  ]\n", cmt)
 		}
-		fmt.Fprintf(b, "%s  ]\n", cmt)
 		fmt.Fprintf(b, "%s  default = %s\n\n", cmt, tomlString(x.Default))
 	}
 	return b.String(), nil
 }
 
-// Go finds all translatable strings in pattern.
+// Go finds all translatable strings in dir.
 //
 // TODO: find context from comments too.
-func Go(pattern string, funs ...string) (Entries, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	cwd += "/"
-
+func Go(dir string, funs ...string) (Entries, error) {
 	pkgs, err := packages.Load(&packages.Config{
-		Mode: packages.NeedFiles | packages.NeedSyntax | packages.NeedName | packages.NeedTypes,
-	}, pattern)
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedTypes | packages.NeedSyntax,
+		Dir:  dir,
+	}, dir)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "finder.Go")
 	}
 
 	var (
@@ -216,27 +222,44 @@ func Go(pattern string, funs ...string) (Entries, error) {
 		errs  = errors.NewGroup(20)
 	)
 	for _, p := range pkgs {
+		if len(p.Errors) > 0 {
+			for _, e := range p.Errors {
+				errs.Append(e)
+			}
+			return nil, errors.Wrap(errs.ErrorOrNil(), "finder.Go")
+		}
 		for _, f := range p.Syntax {
 			ast.Inspect(f, func(n ast.Node) bool {
+				if n == nil {
+					return true
+				}
+
 				c, ok := n.(*ast.CallExpr)
 				if !ok {
 					return true
 				}
 
-				name := new(bytes.Buffer)
-				err := printer.Fprint(name, p.Fset, c.Fun)
-				if errs.Append(err) {
-					return true
+				var name string
+				switch f := c.Fun.(type) {
+				case *ast.Ident:
+					name = f.Name
+				case *ast.SelectorExpr:
+					name = f.Sel.Name
+				case *ast.FuncLit, *ast.ArrayType:
+					return true // No work.
+				default:
+					pos := p.Fset.Position(c.Pos())
+					panic(errors.Errorf("finder.Go: unhandled c.Fun type %T at %s:%d\n    %#[1]v", c.Fun, pos.Filename, pos.Line))
 				}
 
-				if !zstring.Contains(funs, name.String()) {
+				if !zstring.Contains(funs, name) {
 					return true
 				}
 
 				if len(c.Args) < 1 {
 					pos := p.Fset.Position(c.Fun.Pos())
 					errs.Append(errors.Errorf("%s:%d: not enough arguments to %q",
-						pos.Filename, pos.Line, name.String()))
+						pos.Filename, pos.Line, name))
 				}
 
 				// Get the first string argument.
@@ -262,7 +285,7 @@ func Go(pattern string, funs ...string) (Entries, error) {
 				}
 
 				pos := p.Fset.Position(c.Pos())
-				e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", strings.TrimPrefix(pos.Filename, cwd), pos.Line))
+				e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", strings.TrimPrefix(pos.Filename, dir+"/"), pos.Line))
 				found[id] = e
 
 				return true
@@ -270,20 +293,15 @@ func Go(pattern string, funs ...string) (Entries, error) {
 		}
 	}
 
-	return found, errs.ErrorOrNil()
+	return found, errors.Wrap(errs.ErrorOrNil(), "finder.Go")
 }
 
 // Template finds all strings in Go templates.
 //
 // TODO: find context from comments too.
-func Template(pattern string, ext []string, funs ...string) (Entries, error) {
-	// TODO: deal with patterns properly.
-	if pattern == "./..." {
-		pattern = "."
-	}
-
+func Template(dir string, ext []string, funs ...string) (Entries, error) {
 	found := make(map[string]Entry)
-	err := filepath.WalkDir(pattern, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -341,7 +359,7 @@ func Template(pattern string, ext []string, funs ...string) (Entries, error) {
 				e.Loc = f.Loc
 			}
 
-			e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", path, nn.Line))
+			e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", strings.TrimPrefix(path, dir+"/"), nn.Line))
 			found[id] = e
 			return false
 		})
@@ -367,7 +385,7 @@ func normalizeMessage(msg string) string {
 	return msg
 }
 
-type Param struct {
+type param struct {
 	kind string   // map, plural, literal, tag
 	keys []string // only for map
 }
@@ -382,7 +400,7 @@ type Param struct {
 // 1. Grep the %() and %[] out of there
 // 2. Check syntax of %[word text]
 // 3. Check if it matches with that we expect in params
-func typeCheck(id, msg string, params ...Param) error {
+func typeCheck(id, msg string, params ...param) error {
 	if msg == "" {
 		return nil
 	}

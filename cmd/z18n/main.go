@@ -20,9 +20,8 @@ Commands:
 
     find    Find message strings
 
-                Find message strings in a source directory. Positional
-                arguments are files/directories to scan, as the "go list"
-                syntax. Defaults to ./... if omitted.
+                Find message strings in a source directory; defauts to the
+                current directory if omitted.
 
                 Flags:
 
@@ -89,7 +88,7 @@ func main() {
 	case "help", zli.CommandNoneGiven:
 		fmt.Print(usage)
 	case "find":
-		paths := []string{"./..."}
+		paths := []string{"."}
 		if len(f.Args) > 1 {
 			paths = f.Args[1:]
 		}

@@ -1,12 +1,9 @@
 //go:generate sh -c "go run ./cmd/gen > ./gen_data.go"
 
-// Package z18n adds support for translations.
+// Package z18n provides translations ("internationalisation", or "i18n").
 //
-// A detailed guide to get started is available in the project README,
-// accessible at:
-//
-//   https://github.com/arp242/z18n or
-//   https://godocs.io/zgo.at/z18n (also includes API docs)
+// A detailed guide to get started is available in the project README at:
+// https://github.com/arp242/z18n
 package z18n
 
 import (
@@ -29,6 +26,10 @@ type Bundle struct {
 	// default because printing escape codes is ugly but safe, and not
 	// escaping in a web app can be disastrous.
 	NoHTML bool
+
+	// Mark messages with «msg»; useful mostly when adding z18n to an existing
+	// application to visually check for untranslated strings.
+	Mark bool
 
 	// Log errors. If an unrecoverable error occurs z18n will add
 	// "%(z18n ERROR [msg])" to the string. If this is non-nil then it will

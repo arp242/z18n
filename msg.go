@@ -19,7 +19,7 @@ type Msg struct {
 
 	// TODO: would be better if we would also allow:
 	//
-	//   %(varname) %[tag text]
+	//   %(varname) %[text]
 	//
 	// Without having to create a map.
 	oneVar bool
@@ -74,12 +74,6 @@ func Tag(tagName, content string, innerHTML ...string) tag {
 	return tag{tag: tagName, content: content, innerHTML: strings.Join(innerHTML, "")}
 }
 
-// Mark messages with «msg»; useful mostly when adding z18n to an existing
-// application to visually check for untranslated strings.
-//
-// TODO: make this a bundle option.
-var Mark = false
-
 func (m Msg) tpl(l *Locale, str string) string {
 	var (
 		tags  = zstring.IndexPairs(str, "%[", "]")
@@ -91,7 +85,7 @@ func (m Msg) tpl(l *Locale, str string) string {
 	// 	fmt.Printf("\tvars: %v; tags: %v\n\t%#v\n\n", tags, vars, m.data)
 	// }
 	if total == 0 {
-		if Mark {
+		if l.bundle.Mark {
 			return "«" + str + "»"
 		}
 		return str
@@ -103,7 +97,7 @@ func (m Msg) tpl(l *Locale, str string) string {
 	// TODO: this can be more efficient.
 	vars = zstring.IndexPairs(str, "%(", ")")
 
-	if Mark {
+	if l.bundle.Mark {
 		return "«" + m.tplVars(l, str, vars) + "»"
 	}
 	return m.tplVars(l, str, vars)
