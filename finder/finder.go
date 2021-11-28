@@ -67,6 +67,8 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 		switch k {
 		case "base-file":
 			f.BaseFile = v.(bool)
+		case "no-update":
+			f.NoUpdate = v.(bool)
 		case "generated":
 			f.Generated = v.(time.Time)
 		case "language":
@@ -223,19 +225,19 @@ func (e Entries) toml() (string, error) {
 		}
 		fmt.Fprintf(b, "%s  default = %s\n", cmt, tomlString(x.Default))
 		if x.Zero != "" {
-			fmt.Fprintf(b, "%s  zero    = %s\n\n", cmt, tomlString(x.Zero))
+			fmt.Fprintf(b, "%s  zero    = %s\n", cmt, tomlString(x.Zero))
 		}
 		if x.One != "" {
-			fmt.Fprintf(b, "%s  one     = %s\n\n", cmt, tomlString(x.One))
+			fmt.Fprintf(b, "%s  one     = %s\n", cmt, tomlString(x.One))
 		}
 		if x.Two != "" {
-			fmt.Fprintf(b, "%s  two     = %s\n\n", cmt, tomlString(x.Two))
+			fmt.Fprintf(b, "%s  two     = %s\n", cmt, tomlString(x.Two))
 		}
 		if x.Few != "" {
-			fmt.Fprintf(b, "%s  few     = %s\n\n", cmt, tomlString(x.Few))
+			fmt.Fprintf(b, "%s  few     = %s\n", cmt, tomlString(x.Few))
 		}
 		if x.Many != "" {
-			fmt.Fprintf(b, "%s  many    = %s\n\n", cmt, tomlString(x.Many))
+			fmt.Fprintf(b, "%s  many    = %s\n", cmt, tomlString(x.Many))
 		}
 		b.WriteByte('\n')
 	}
@@ -372,6 +374,11 @@ func Template(dir string, ext []string, funs ...string) (Entries, error) {
 				name = f.Ident
 			case *parse.FieldNode:
 				name = "." + strings.Join(f.Ident, ".")
+			case *parse.VariableNode:
+				name = strings.Join(f.Ident, ".")
+				if strings.HasPrefix(name, "$.") {
+					name = name[1:]
+				}
 			}
 			if !zstring.Contains(funs, name) {
 				return false
