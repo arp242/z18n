@@ -18,6 +18,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"golang.org/x/tools/go/packages"
 	"zgo.at/errors"
+	"zgo.at/zstd/zfilepath"
 	"zgo.at/zstd/zstring"
 	"zgo.at/ztpl/parse"
 )
@@ -28,6 +29,11 @@ type (
 		ID      string   `toml:"-"`
 		Loc     []string `toml:"loc"`
 		Default string   `toml:"default"`
+		Zero    string   `toml:"zero"`
+		One     string   `toml:"one"`
+		Two     string   `toml:"two"`
+		Few     string   `toml:"few"`
+		Many    string   `toml:"many"`
 		Removed bool     `toml:"-"`
 	}
 
@@ -37,6 +43,7 @@ type (
 	// File is a translation file.
 	File struct {
 		BaseFile    bool                   `toml:"base-file"`
+		NoUpdate    bool                   `toml:"no-update"`
 		Generated   time.Time              `toml:"generated"`
 		Language    string                 `toml:"language"`
 		Maintainers []string               `toml:"maintainers"`
@@ -91,13 +98,26 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 
 		e := Entry{
 			ID:      k,
-			Default: vv["default"].(string),
+			Default: asString(vv["default"]),
+			Zero:    asString(vv["zero"]),
+			One:     asString(vv["one"]),
+			Two:     asString(vv["two"]),
+			Few:     asString(vv["few"]),
+			Many:    asString(vv["many"]),
 			Loc:     loc,
 		}
 		f.Strings[k] = e
 	}
 
 	return nil
+}
+
+func asString(i interface{}) string {
+	s, ok := i.(string)
+	if ok {
+		return s
+	}
+	return ""
 }
 
 // TOML formats all entries as TOML.
@@ -164,6 +184,7 @@ func (e Entries) list() (string, error) {
 
 	b := new(strings.Builder)
 	for _, x := range e.Sorted() {
+		// TODO: add plurals (or at least mark they exist).
 		fmt.Fprintf(b, "%s %s %q\n", x.ID, strings.Repeat(" ", max-utf8.RuneCountInString(x.ID)), x.Default)
 	}
 	return b.String(), nil
@@ -200,7 +221,23 @@ func (e Entries) toml() (string, error) {
 			}
 			fmt.Fprintf(b, "%s  ]\n", cmt)
 		}
-		fmt.Fprintf(b, "%s  default = %s\n\n", cmt, tomlString(x.Default))
+		fmt.Fprintf(b, "%s  default = %s\n", cmt, tomlString(x.Default))
+		if x.Zero != "" {
+			fmt.Fprintf(b, "%s  zero    = %s\n\n", cmt, tomlString(x.Zero))
+		}
+		if x.One != "" {
+			fmt.Fprintf(b, "%s  one     = %s\n\n", cmt, tomlString(x.One))
+		}
+		if x.Two != "" {
+			fmt.Fprintf(b, "%s  two     = %s\n\n", cmt, tomlString(x.Two))
+		}
+		if x.Few != "" {
+			fmt.Fprintf(b, "%s  few     = %s\n\n", cmt, tomlString(x.Few))
+		}
+		if x.Many != "" {
+			fmt.Fprintf(b, "%s  many    = %s\n\n", cmt, tomlString(x.Many))
+		}
+		b.WriteByte('\n')
 	}
 	return b.String(), nil
 }
@@ -209,15 +246,10 @@ func (e Entries) toml() (string, error) {
 //
 // TODO: find context from comments too.
 func Go(dir string, funs ...string) (Entries, error) {
-	p := dir
-	if p == "" || p == "." {
-		p = "./..."
-	}
-
 	pkgs, err := packages.Load(&packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles | packages.NeedImports | packages.NeedTypes | packages.NeedSyntax,
 		Dir:  dir,
-	}, p)
+	}, filepath.Join(dir, "/..."))
 	if err != nil {
 		return nil, errors.Wrap(err, "finder.Go")
 	}
@@ -290,7 +322,7 @@ func Go(dir string, funs ...string) (Entries, error) {
 				}
 
 				pos := p.Fset.Position(c.Pos())
-				e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", strings.TrimPrefix(pos.Filename, dir+"/"), pos.Line))
+				e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", zfilepath.TrimPrefix(pos.Filename, dir), pos.Line))
 				found[id] = e
 
 				return true
@@ -364,7 +396,7 @@ func Template(dir string, ext []string, funs ...string) (Entries, error) {
 				e.Loc = f.Loc
 			}
 
-			e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", strings.TrimPrefix(path, dir+"/"), nn.Line))
+			e.Loc = append(e.Loc, fmt.Sprintf("%s:%d", zfilepath.TrimPrefix(path, dir), nn.Line))
 			found[id] = e
 			return false
 		})

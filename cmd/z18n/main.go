@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -130,6 +131,9 @@ func main() {
 func find(dirs, fun, tplFun, tplExt []string) (finder.Entries, error) {
 	found := make(finder.Entries)
 	for _, d := range dirs {
+		d, err := filepath.Abs(d)
+		zli.F(err)
+
 		f, err := finder.Go(d, fun...)
 		if err != nil {
 			return nil, err
@@ -182,21 +186,6 @@ func update(baseFile string, mergeFiles []string) {
 		Strings:   baseEntries,
 	}
 
-	// for k, v := range baseMap {
-	// 	vv := v.(map[string]interface{})
-	// 	ll := vv["loc"].([]interface{})
-	// 	loc := make([]string, 0, len(ll))
-	// 	for _, s := range ll {
-	// 		loc = append(loc, s.(string))
-	// 	}
-
-	// 	base.Strings[k] = finder.Entry{
-	// 		ID:      k,
-	// 		Default: vv["default"].(string),
-	// 		Loc:     loc,
-	// 	}
-	// }
-
 	merges := make([]finder.File, 0, len(mergeFiles))
 	for _, f := range mergeFiles {
 		if f == baseFile {
@@ -211,6 +200,9 @@ func update(baseFile string, mergeFiles []string) {
 
 		if file.BaseFile {
 			zli.Fatalf("%q is a base-file", f)
+		}
+		if file.NoUpdate {
+			continue
 		}
 
 		file.Path = f

@@ -8,7 +8,7 @@ require (
 	golang.org/x/tools v0.1.7
 	zgo.at/errors v1.0.1-0.20210313142254-4e0fb19b1249
 	zgo.at/zli v0.0.0-20211017231103-84f8e371c324
-	zgo.at/zstd v0.0.0-20211127155518-f07bbf9ab397
+	zgo.at/zstd v0.0.0-20211128011855-d2731112649f
 	zgo.at/ztpl v0.0.0-20211017232908-7dce3dc79277
 )
 

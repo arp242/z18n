@@ -56,6 +56,11 @@ func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
 			k: Msg{
 				ID:      k,
 				Default: v.Default,
+				Zero:    v.Zero,
+				One:     v.One,
+				Two:     v.Two,
+				Few:     v.Few,
+				Many:    v.Many,
 			},
 		})
 	}

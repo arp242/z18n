@@ -38,7 +38,7 @@ zgo.at/json v0.0.0-20200627042140-d5025253667f/go.mod h1:DUuNIRpNC7/cup+Gy0qhwQE
 zgo.at/zli v0.0.0-20211017231103-84f8e371c324 h1:C6ErNoeGzTMvDus23rOkxo/PJpVjkXh69tjclsPexgM=
 zgo.at/zli v0.0.0-20211017231103-84f8e371c324/go.mod h1:pWkBHZ5qoEmvSDbFYdQMAKaRMEuAtdUKb21k/OOYOJw=
 zgo.at/zstd v0.0.0-20210512041107-8951517febd3/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
-zgo.at/zstd v0.0.0-20211127155518-f07bbf9ab397 h1:CGof9ezBOx+8/1ZmgiXGvEIi5ufTBWjPP9oEteM539I=
-zgo.at/zstd v0.0.0-20211127155518-f07bbf9ab397/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
+zgo.at/zstd v0.0.0-20211128011855-d2731112649f h1:cGv4dqYnSExnHKS7ZQfFpPi2admilXcUBP/b3Kurmm8=
+zgo.at/zstd v0.0.0-20211128011855-d2731112649f/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
 zgo.at/ztpl v0.0.0-20211017232908-7dce3dc79277 h1:FicTpGqTvbeeRMA4tp+hmQ3vthoNoTr8KFq04l/uDec=
 zgo.at/ztpl v0.0.0-20211017232908-7dce3dc79277/go.mod h1:mhjSF7+pfwMjNhDgmw9Ywr1CixzeVWuvMjF7gLJT8Uw=
