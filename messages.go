@@ -1,34 +1,46 @@
 package z18n
 
 import (
+	"fmt"
 	"io/fs"
 
 	"github.com/BurntSushi/toml"
 	"golang.org/x/text/language"
 	"zgo.at/errors"
-	"zgo.at/z18n/finder"
+	"zgo.at/z18n/msgfile"
 	"zgo.at/zstd/zfilepath"
 )
 
-func (b *Bundle) ReadMessagesFromDir(fsys fs.FS, glob string) error {
+// ReadMessagesDir reads all message files from fsys matching the glob pattern.
+func (b *Bundle) ReadMessagesDir(fsys fs.FS, glob string) error {
 	ls, err := fs.Glob(fsys, glob)
 	if err != nil {
-		return errors.Wrap(err, "Bundle.ReadMessagesFromDir")
+		return errors.Wrap(err, "Bundle.ReadMessagesDir")
 	}
 
 	for _, f := range ls {
 		err := b.ReadMessages(fsys, f)
 		if err != nil {
-			return errors.Wrapf(err, "Bundle.ReadMessagesFromDir: %q", f)
+			var tErr tplErr
+			if !errors.As(err, &tErr) {
+				return errors.Wrapf(err, "Bundle.ReadMessagesDir: %q", f)
+			}
 		}
 	}
 	return nil
 }
 
+type tplErr string
+
+func (t tplErr) Error() string {
+	return fmt.Sprintf("z18n.ReadMessages: can't read messages from a template file (%q)", string(t))
+}
+
+// ReadMessages reads a single messages files.
 func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
 	_, ext := zfilepath.SplitExt(path)
 	var (
-		file finder.File
+		file msgfile.File
 		err  error
 	)
 	switch ext {
@@ -41,9 +53,9 @@ func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
 		return errors.Wrap(err, "Bundle.ReadMessages: decode")
 	}
 
-	// Basefile is not intended for translations.
-	if file.BaseFile {
-		return nil
+	// Template file is not intended for translations.
+	if file.Template {
+		return tplErr(path)
 	}
 
 	lang, err := language.Parse(file.Language)

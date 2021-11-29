@@ -40,5 +40,7 @@ zgo.at/zli v0.0.0-20211017231103-84f8e371c324/go.mod h1:pWkBHZ5qoEmvSDbFYdQMAKaR
 zgo.at/zstd v0.0.0-20210512041107-8951517febd3/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
 zgo.at/zstd v0.0.0-20211128011855-d2731112649f h1:cGv4dqYnSExnHKS7ZQfFpPi2admilXcUBP/b3Kurmm8=
 zgo.at/zstd v0.0.0-20211128011855-d2731112649f/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
+zgo.at/zstd v0.0.0-20211129152916-4ab6a8f86a49 h1:6JkIqMGSkz6MM4xW1C6SbMILfYsaVAGTp1/vBQrKTNg=
+zgo.at/zstd v0.0.0-20211129152916-4ab6a8f86a49/go.mod h1:sQqrTxBwKW0nlwcOg9RxXB8ikY+NBciJnJRPOq/gEuY=
 zgo.at/ztpl v0.0.0-20211128061406-6ff34b1256c4 h1:/GHTN42or9pD7HVnlQohlC+QegKpwBn9hhE0Fa8zJPc=
 zgo.at/ztpl v0.0.0-20211128061406-6ff34b1256c4/go.mod h1:mhjSF7+pfwMjNhDgmw9Ywr1CixzeVWuvMjF7gLJT8Uw=

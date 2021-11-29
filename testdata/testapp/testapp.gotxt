@@ -1,0 +1,4 @@
+{{t "tpl-1"}}
+
+{{/* z18n: context for tpl-2. */}}
+{{.T "tpl-2"}}

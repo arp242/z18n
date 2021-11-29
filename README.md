@@ -26,9 +26,7 @@ README index:
   - [HTML tags](#html-tags)
   - [Localisation of dates, numbers](#localisation-of-dates-numbers)
   - [Plurals](#plurals)
-<!--
   - [Adding context](#adding-context)
--->
 - [Using from templates](#using-from-templats)
 - [JavaScript](#javascript)
 - [Finding messages and creating translation files](#finding-messages-and-creating-translation-files)
@@ -475,7 +473,6 @@ plurals/translations setting "Other" seems kinda weird.
 
 [pl]: plural/rule_gen.go#344
 
-<!-- TODO: doesn't work yet
 ### Adding context
 It's often useful for translators to have some clue what exactly a string refers
 to. Generally speaking, the shorter the string, the more useful adding context
@@ -539,7 +536,6 @@ l.T("button/get-quote|Get")
 l.T("button/get-quote|Get")
 // z18n: This is on the next line.
 ```
--->
 
 Using from templates
 --------------------
