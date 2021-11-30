@@ -2,6 +2,7 @@ package msgfile
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -14,6 +15,10 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 	m := d.(map[string]interface{})
 	meta := m["__meta__"]
 	delete(m, "__meta__")
+
+	if meta == nil {
+		return errors.New("no __meta__ table")
+	}
 
 	for k, v := range meta.(map[string]interface{}) {
 		switch k {

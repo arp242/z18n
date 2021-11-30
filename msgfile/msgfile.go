@@ -22,16 +22,32 @@ const (
 type (
 	// File is a translation file.
 	File struct {
-		Template    bool                   `toml:"template"`    // Is this a template file?
-		NoUpdate    bool                   `toml:"no-update"`   // Don't update with "z18n update"
-		Generated   time.Time              `toml:"generated"`   // Updated date.
-		Language    string                 `toml:"language"`    // Language this is for.
-		Maintainers []string               `toml:"maintainers"` // Maintainer(s) of this file.
-		Comments    string                 `toml:"comments"`    // Comments for translators.
-		Options     map[string]interface{} `toml:"options"`     // CLI options; only if template=true.
+		// Is this a template file?
+		Template bool `toml:"template" json:"template"`
 
-		Strings Entries `toml:"-"` // Translate strings.
-		Path    string  `toml:"-"` // File path; used internally.
+		// Don't update with "z18n update"
+		NoUpdate bool `toml:"no-update" json:"no_update"`
+
+		// Updated date.
+		Generated time.Time `toml:"generated" json:"generated"`
+
+		// Language this is for.
+		Language string `toml:"language" json:"language"`
+
+		// Maintainer(s) of this file.
+		Maintainers []string `toml:"maintainers" json:"maintainers"`
+
+		// Comments for translators.
+		Comments string `toml:"comments" json:"comments"`
+
+		// CLI options; only if template=true.
+		Options map[string]interface{} `toml:"options" json:"options"`
+
+		// Translate strings.
+		Strings Entries `toml:"-" json:"-"`
+
+		// File path; used internally.
+		Path string `toml:"-" json:"-"`
 	}
 
 	// Entries are a list of translatable entries.
@@ -39,18 +55,18 @@ type (
 
 	// Entry is a single translatable entry.
 	Entry struct {
-		ID      string   `toml:"-"`       // Translation ID.
-		Loc     []string `toml:"loc"`     // Locations in code.
-		Context string   `toml:"context"` // Translation context.
-		Updated string   `toml:"updated"` // Updated?
+		ID      string   `toml:"id" json:"id"`           // Translation ID.
+		Loc     []string `toml:"loc" json:"loc"`         // Locations in code.
+		Context string   `toml:"context" json:"context"` // Translation context.
+		Updated string   `toml:"updated" json:"updated"` // Updated?
 
 		// Messages.
-		Default string `toml:"default"`
-		Zero    string `toml:"zero"`
-		One     string `toml:"one"`
-		Two     string `toml:"two"`
-		Few     string `toml:"few"`
-		Many    string `toml:"many"`
+		Default string `toml:"default" json:"default"`
+		Zero    string `toml:"zero" json:"zero"`
+		One     string `toml:"one" json:"one"`
+		Two     string `toml:"two" json:"two"`
+		Few     string `toml:"few" json:"few"`
+		Many    string `toml:"many" json:"many"`
 	}
 )
 
