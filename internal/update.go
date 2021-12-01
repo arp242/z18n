@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
 	"zgo.at/z18n/msgfile"
 )
 
@@ -15,22 +14,15 @@ func Update(dir string) error {
 	}
 
 	var (
+		fsys   = os.DirFS(dir)
 		tpl    msgfile.File
 		merges = make([]msgfile.File, 0, len(ls)-1)
 	)
 	for _, l := range ls {
-		m, err := os.ReadFile(filepath.Join(dir, l.Name()))
+		file, err := msgfile.ReadFile(fsys, l.Name())
 		if err != nil {
 			return err
 		}
-
-		var file msgfile.File
-		_, err = toml.Decode(string(m), &file)
-		if err != nil {
-			return err
-		}
-
-		file.Path = filepath.Join(dir, l.Name())
 
 		if file.Template {
 			tpl = file
@@ -69,7 +61,7 @@ func Update(dir string) error {
 		return err
 	}
 
-	err = os.WriteFile(tpl.Path, []byte(tt), 0644)
+	err = os.WriteFile(filepath.Join(dir, tpl.Path), []byte(tt), 0644)
 	if err != nil {
 		return err
 	}
@@ -79,7 +71,7 @@ func Update(dir string) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(f.Path, []byte(tt), 0644)
+		err = os.WriteFile(filepath.Join(dir, f.Path), []byte(tt), 0644)
 		if err != nil {
 			return err
 		}

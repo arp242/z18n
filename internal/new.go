@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/BurntSushi/toml"
 	"zgo.at/z18n/msgfile"
 )
 
@@ -16,20 +14,16 @@ func New(language, dir string) error {
 		return fmt.Errorf("%q already exists", dst)
 	}
 
+	fsys := os.DirFS(dir)
 	ls, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
 	for _, l := range ls {
-		if !strings.HasSuffix(l.Name(), ".toml") {
-			continue
-		}
-
-		var f msgfile.File
-		_, err := toml.DecodeFile(filepath.Join(dir, l.Name()), &f)
+		f, err := msgfile.ReadFile(fsys, l.Name())
 		if err != nil {
-			return fmt.Errorf("reading %q: %w", l.Name(), err)
+			return err
 		}
 
 		if f.Template {

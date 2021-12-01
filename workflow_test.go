@@ -25,6 +25,7 @@ func TestWorkflow(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
+	fsys := os.DirFS(dir)
 
 	// Create i18n dir contents
 	{
@@ -48,15 +49,15 @@ func TestWorkflow(t *testing.T) {
 	}
 
 	// Set actual translation strings.
-	tpl, err := msgfile.ReadFile(filepath.Join(dir, "template.toml"))
+	tpl, err := msgfile.ReadFile(fsys, "template.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	en, err := msgfile.ReadFile(filepath.Join(dir, "en-GB.toml"))
+	en, err := msgfile.ReadFile(fsys, "en-GB.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	nl, err := msgfile.ReadFile(filepath.Join(dir, "nl-NL.toml"))
+	nl, err := msgfile.ReadFile(fsys, "nl-NL.toml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,10 +72,10 @@ func TestWorkflow(t *testing.T) {
 			nl.Strings[k] = v
 		}
 
-		if err := en.WriteTo(en.Path); err != nil {
+		if err := en.WriteTo(filepath.Join(dir, en.Path)); err != nil {
 			t.Fatal(err)
 		}
-		if err := nl.WriteTo(nl.Path); err != nil {
+		if err := nl.WriteTo(filepath.Join(dir, nl.Path)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -204,7 +205,7 @@ func TestWorkflow(t *testing.T) {
 	// TODO
 	{
 		b := NewBundle(language.BritishEnglish)
-		err := b.ReadMessagesDir(os.DirFS(dir), "*.toml")
+		err := b.ReadMessagesDir(fsys, "*.toml")
 		if err != nil {
 			t.Fatal(err)
 		}

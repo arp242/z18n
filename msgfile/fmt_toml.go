@@ -102,6 +102,12 @@ func (f File) TOML() (string, error) {
 	} else {
 		meta["maintainers"] = f.Maintainers
 	}
+	if f.NoUpdate {
+		meta["no-update"] = true
+	}
+	if f.Comments != "" {
+		meta["comments"] = f.Comments
+	}
 
 	b := new(bytes.Buffer)
 	err := toml.NewEncoder(b).Encode(map[string]interface{}{"__meta__": meta})

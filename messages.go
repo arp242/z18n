@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/BurntSushi/toml"
 	"golang.org/x/text/language"
 	"zgo.at/errors"
 	"zgo.at/z18n/msgfile"
-	"zgo.at/zstd/zfilepath"
 )
 
 // ReadMessagesDir reads all message files from fsys matching the glob pattern.
@@ -38,17 +36,7 @@ func (t tplErr) Error() string {
 
 // ReadMessages reads a single messages files.
 func (b *Bundle) ReadMessages(fsys fs.FS, path string) error {
-	_, ext := zfilepath.SplitExt(path)
-	var (
-		file msgfile.File
-		err  error
-	)
-	switch ext {
-	default:
-		return errors.Errorf("Bundle.ReadMessages: unknown file type: %q", ext)
-	case "toml":
-		_, err = toml.DecodeFS(fsys, path, &file)
-	}
+	file, err := msgfile.ReadFile(fsys, path)
 	if err != nil {
 		return errors.Wrap(err, "Bundle.ReadMessages: decode")
 	}

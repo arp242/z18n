@@ -159,7 +159,7 @@ func (l Locale) T(id string, data ...interface{}) string {
 	m, ok := l.bundle.messages[tag]
 	if ok {
 		msg, ok := m[id]
-		if ok {
+		if ok && msg.Default != "" {
 			msg.ID = id
 			msg.data = params
 			msg.oneVar = oneVar

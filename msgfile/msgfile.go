@@ -3,6 +3,7 @@ package msgfile
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"regexp"
 	"sort"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"zgo.at/errors"
+	"zgo.at/zstd/zfilepath"
 	"zgo.at/zstd/zstring"
 )
 
@@ -23,13 +25,13 @@ type (
 	// File is a translation file.
 	File struct {
 		// Is this a template file?
-		Template bool `toml:"template" json:"template"`
+		Template bool `toml:"template,omitempty" json:"template,omitempty"`
 
 		// Don't update with "z18n update"
-		NoUpdate bool `toml:"no-update" json:"no_update"`
+		NoUpdate bool `toml:"no-update,omitempty" json:"no_update,omitempty"`
 
 		// Updated date.
-		Generated time.Time `toml:"generated" json:"generated"`
+		Generated time.Time `toml:"generated,omitempty" json:"generated,omitempty"`
 
 		// Language this is for.
 		Language string `toml:"language" json:"language"`
@@ -41,10 +43,10 @@ type (
 		Comments string `toml:"comments" json:"comments"`
 
 		// CLI options; only if template=true.
-		Options map[string]interface{} `toml:"options" json:"options"`
+		Options map[string]interface{} `toml:"options,omitempty" json:"options,omitempty"`
 
 		// Translate strings.
-		Strings Entries `toml:"-" json:"-"`
+		Strings Entries `toml:"strings" json:"strings"`
 
 		// File path; used internally.
 		Path string `toml:"-" json:"-"`
@@ -55,28 +57,46 @@ type (
 
 	// Entry is a single translatable entry.
 	Entry struct {
-		ID      string   `toml:"id" json:"id"`           // Translation ID.
-		Loc     []string `toml:"loc" json:"loc"`         // Locations in code.
-		Context string   `toml:"context" json:"context"` // Translation context.
-		Updated string   `toml:"updated" json:"updated"` // Updated?
+		ID      string   `toml:"id" json:"id"`                               // Translation ID.
+		Loc     []string `toml:"loc" json:"loc"`                             // Locations in code.
+		Context string   `toml:"context,omitempty" json:"context,omitempty"` // Translation context.
+		Updated string   `toml:"updated,omitempty" json:"updated,omitempty"` // Updated?
 
 		// Messages.
-		Default string `toml:"default" json:"default"`
-		Zero    string `toml:"zero" json:"zero"`
-		One     string `toml:"one" json:"one"`
-		Two     string `toml:"two" json:"two"`
-		Few     string `toml:"few" json:"few"`
-		Many    string `toml:"many" json:"many"`
+		Default string `toml:"default,omitempty" json:"default,omitempty"`
+		Zero    string `toml:"zero,omitempty" json:"zero,omitempty"`
+		One     string `toml:"one,omitempty" json:"one,omitempty"`
+		Two     string `toml:"two,omitempty" json:"two,omitempty"`
+		Few     string `toml:"few,omitempty" json:"few,omitempty"`
+		Many    string `toml:"many,omitempty" json:"many,omitempty"`
 	}
 )
 
-func ReadFile(path string) (File, error) {
+// ReadFile reads a message file.
+func ReadFile(fsys fs.FS, path string) (File, error) {
+	fp, err := fsys.Open(path)
+	if err != nil {
+		return File{}, errors.Wrap(err, "msgfile.ReadFile")
+	}
+	defer fp.Close()
+
+	_, ext := zfilepath.SplitExt(path)
 	var f File
-	_, err := toml.DecodeFile(path, &f)
+	switch ext {
+	default:
+		return File{}, errors.Errorf("z18n.msgfile.ReadFile: unknown file type %q in %q", ext, path)
+	case "toml":
+		_, err = toml.DecodeReader(fp, &f)
+	}
+	if err != nil {
+		return f, errors.Wrap(err, "msgfile.ReadFile")
+	}
+
 	f.Path = path
-	return f, errors.Wrap(err, "msgfile.ReadFile")
+	return f, nil
 }
 
+// WriteTo writes out a message file.
 func (f File) WriteTo(path string) error {
 	t, err := f.TOML()
 	if err != nil {
