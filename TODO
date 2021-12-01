@@ -1,0 +1,40 @@
+- Create msgfile.Dir which loads everything from one message file directory.
+
+  Also split out the "template file to "template.toml" and "options.toml" and
+  just hard-code these file paths.
+
+- Not 100% sold on the `T()` syntax for setting default messages yet. In
+  principle this `T("id", "default msg")` would be nicer, but then *not* setting
+  default mesages means you have to use `T("id", "", param)`, which kinda sucks.
+
+  Maybe add a new `TD()` function which accepts a default message? We can also
+  use this to set plurals; right now this requires a TOML file.
+
+	TD("id", "%(n) default messages",
+		z18n.One("default message"),
+		z18n.N(n))
+
+  Or:
+
+	T("id",
+		z18n.Default("%(n) default messages"),
+		z18n.One("default message"),
+		z18n.N(n))
+
+  But that's a lot of typing and rather noisy for the common use case:
+
+  T("id", z18n.Default("default msg"), arg)
+
+  I don't know ... I guess the current is the best out of all options. Maybe add
+  TD() as an option though?
+
+- `%[%link cute video]` syntax is ugly.
+
+  It used to be `%[link cute video]`, but that's just confusing. I can't think
+  of anything better/easier for this.
+
+- Port the web UI from GoatCounter to here.
+
+- Some of the "variable functions" should be done different; why write
+  `%(somedate | date full)`? Should be `T("..", z18n.Date(someTime, z18n.Full)`
+  or some such.

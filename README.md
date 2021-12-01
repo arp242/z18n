@@ -7,14 +7,10 @@ The chief motivation for writing this is that I wanted a nice painless API (as
 painless as i18n gets anyway), and none of the existing solutions that I could
 find really offered this, not without some extensive wrapping anyway.
 
-[github.com/nicksnyder/go-i18n][go-i18n] was an important inspiration, and z18n
-includes some code from it – why reinvent stuff you can copy right? Standing on
-the shoulders of giants and all that.
-
 It supports pluralisation, named variables with a convenient syntax, placeholder
-syntax for HTML tags, localisation of dates and numbers, various different
-message formats (Go source files, Gettext .po files, SQL, TOML, YAML, JSON), and
-includes a web interface to translate messages.
+syntax for HTML tags, and localisation of dates and numbers.
+
+<!-- TODO: not yet..., and includes a web interface to translate messages. -->
 
 [go-i18n]: https://github.com/nicksnyder/go-i18n
 
@@ -47,7 +43,7 @@ This sets the default language set to English. The "default language" is the
 nothing stopping you from writing an application in Russian and then translating
 that to English or other languages.
 
-You add messages for a language to a bundle:
+You add messages for a language:
 
 ```go
 b.AddMessages(language.English, map[string]Msg{
@@ -61,10 +57,10 @@ b.AddMessages(language.Dutch, map[string]Msg{
 })
 ```
 
-There are other ways to add messages too, such as TOML or .po files. See the
-"Finding messages and creating translation files" section.
+You can also load messages from TOML files; see the "Finding messages and
+creating translation files" section below.
 
-Get a locale from the bundle:
+To get messages you get a locale from the bundle:
 
 ```go
 l := b.Locale("nl-NL")
@@ -76,28 +72,25 @@ usually want to do something like:
 
 ```go
 l := b.Locale(
-    r.Query.Get("lang"),
-    user.Settings.Language,
-    r.Header.Get("Accept-Language"))
+    r.Query.Get("lang"),             // Prefer explicit overwrite from query param.
+    user.Settings.Language,          // User setting in your application.
+    r.Header.Get("Accept-Language")) // Last option is to use the browser setting.
 ```
-
-This will prefer the manual `?lang=[..]` query parameter, or uses the user's
-settings (if set), falling back to the browser's `Accept-Language` header.
 
 *Aside: please do not use the IP address for this. As someone lived abroad for a
 few years it's a massive PITA to have things automatically be set to a language
 I don't understand. Even in the Netherlands I often just prefer the English
 version.*
 
-If you have a CLI or desktop app you can use `b.LocaleFromEnv()`; this will use
-the `LANG`, `LANGUAGES`, and `LC_*` environment variables to construct a locale.
+If you have a CLI or desktop app you can use `b.LocaleFromEnv()` to create a new
+locale; this will use the `LANG`, `LANGUAGES`, and `LC_*` environment variables.
 
-You almost certainly want to use codes with a region tag such as `nl-NL` if
-possible, `nl` being the language code for Dutch, and `NL` being the region of
-the Netherlands. It will fall back to the messages for `nl` if there aren't any
-for `nl-NL` specifically, and the localisation for dates and such will be
-appropriate for this region. American and British people don't write their dates
-in the same way for example, even though they both speak English.
+You almost certainly want to use codes with a region tag such as `nl-NL` when
+creating locales, `nl` being the language code for Dutch, and `NL` being the
+region of the Netherlands. It will fall back to the messages for `nl` if there
+aren't any for `nl-NL` specifically, and the localisation for dates and such
+will be appropriate for this region. American and British people don't write
+their dates in the same way for example, even though they both speak English.
 
 ---
 
@@ -136,10 +129,10 @@ locale such as `nl`.
 
 This means you can translate messages in the `nl` language, which should be
 appropriate for most Dutch speakers, but also add a few regional variations for
-`nl-BE` (Dutch as spoken in Belgium; amai!) if need be.
+`nl-BE` (Dutch as spoken in Belgium) if need be.
 
-A message ID can contain any printable character, including whitespace, except a
-bar (`|`).
+A message ID can contain any printable character, including whitespace, but
+cannot start with a bar (`|`).
 
 You can optionally specify a default message after a `|`:
 
@@ -158,7 +151,7 @@ pluralized string then you will need to add the other variants as messages
 through an `Bundle.AddMessages()` call or message file (more on pluralisation
 and messages files later).
 
-The `song/` doesn't mean anything special, it's just a convention that might be
+The `/` doesn't mean anything special, it's just a convention that might be
 useful. You can also use `song-coconuts`, `song#coconuts`, `song coconuts`,
 `song/silly/coconuts`, or just not use any prefix at all and use only
 `coconuts`. Personally I found using prefixes useful as it adds a bit context
@@ -415,7 +408,7 @@ To add Plurals to the messages use the appropriate field(s):
 ```go
 b.AddMessages(language.BritishEnglish, map[string]Msg{
     "ants!": Msg{
-        One:   "Help, I've got an ant in my trousers!"
+        One:     "Help, I've got an ant in my trousers!"
         Default: "Help, I've got %(n) ants in my trousers!"
     },
 })
@@ -439,8 +432,8 @@ b.AddMessages(language.Indonesian, map[string]Msg{
 b.AddMessages(language.Polish, map[string]Msg{
     "ants!": Msg{
         One:  "Pomocy, mam mrówkę w spodniach!",
-        Two:  "Pomocy, mam %(n) mrówki w spodniach! ",:
-        Few:  "Pomocy, mam %(n) mrówek w spodniach! ",:
+        Two:  "Pomocy, mam %(n) mrówki w spodniach!",:
+        Few:  "Pomocy, mam %(n) mrówek w spodniach!",:
         Many: "Pomocy, mam w spodniach %(n) mrówek!",:
     },
 })
@@ -471,7 +464,7 @@ Note that in CLDR "Default" is named "Other". I renamed this as I thought it
 made more sense, especially since most messages don't have any
 plurals/translations setting "Other" seems kinda weird.
 
-[pl]: plural/rule_gen.go#344
+[pl]: plural/rule_gen.go#L344
 
 ### Adding context
 It's often useful for translators to have some clue what exactly a string refers
@@ -619,7 +612,7 @@ The `./cmd/z18n` tool can find messages in Go and template files.
 
 To find all messages in the current directory and all subdirectories:
 
-    % z18n find
+    % z18n init i18n
 
 This will scan for Go files and templates. See `z18n help` for various options.
 
