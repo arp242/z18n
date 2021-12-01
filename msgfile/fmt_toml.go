@@ -80,7 +80,10 @@ func asBool(i interface{}) bool {
 	return b
 }
 func asStringSlice(i interface{}) []string {
-	ii := i.([]interface{})
+	ii, ok := i.([]interface{})
+	if !ok {
+		return nil
+	}
 	s := make([]string, 0, len(ii))
 	for _, ss := range ii {
 		s = append(s, ss.(string))
@@ -115,7 +118,7 @@ func (f File) TOML() (string, error) {
 		return "", err
 	}
 
-	t, err := f.Strings.toml()
+	t, err := f.Strings.toml(f.Template)
 	if err != nil {
 		return "", err
 	}
@@ -124,27 +127,30 @@ func (f File) TOML() (string, error) {
 }
 
 // TODO: implement MarshalTOML instead.
-func (e Entries) toml() (string, error) {
+func (e Entries) toml(isTpl bool) (string, error) {
 	b := new(strings.Builder)
 	for _, x := range e.Sorted() {
 		fmt.Fprintf(b, "[%s]\n", tomlString(x.ID))
 		if x.Updated != "" {
 			fmt.Fprintf(b, "  updated = %s\n", tomlString(x.Updated))
 		}
-		switch len(x.Loc) {
-		case 0: /// Should never happen, but just in case.
-			fmt.Fprintf(b, "  loc     = []\n")
-		case 1:
-			fmt.Fprintf(b, "  loc     = [%s]\n", tomlString(x.Loc[0]))
-		default:
-			fmt.Fprintf(b, "  loc = [\n")
-			for _, l := range x.Loc {
-				fmt.Fprintf(b, "    %s,\n", tomlString(l))
+
+		if isTpl {
+			switch len(x.Loc) {
+			case 0: /// Should never happen, but just in case.
+				fmt.Fprintf(b, "  loc     = []\n")
+			case 1:
+				fmt.Fprintf(b, "  loc     = [%s]\n", tomlString(x.Loc[0]))
+			default:
+				fmt.Fprintf(b, "  loc = [\n")
+				for _, l := range x.Loc {
+					fmt.Fprintf(b, "    %s,\n", tomlString(l))
+				}
+				fmt.Fprintf(b, "  ]\n")
 			}
-			fmt.Fprintf(b, "  ]\n")
-		}
-		if x.Context != "" {
-			fmt.Fprintf(b, "  context = %s\n", tomlString(x.Context))
+			if x.Context != "" {
+				fmt.Fprintf(b, "  context = %s\n", tomlString(x.Context))
+			}
 		}
 		if x.Default != "" {
 			fmt.Fprintf(b, "  default = %s\n", tomlString(x.Default))
