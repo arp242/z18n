@@ -12,7 +12,6 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"golang.org/x/text/number"
-	"zgo.at/zstd/zreflect"
 	"zgo.at/zstd/zstring"
 )
 
@@ -242,7 +241,7 @@ func (l localize) TwentyFourHours() bool { return l.twentyFourHours }
 
 // TODO: support formatting telephone numbers (LC_TELEPHONE)
 func l10n(l *Locale, tag language.Tag, v interface{}, modifiers map[string]string) string {
-	switch vv, t := zreflect.Simplify(v); t {
+	switch vv, t := simplify(v); t {
 	case reflect.String:
 		return vv.String()
 

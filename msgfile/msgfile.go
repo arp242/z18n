@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -84,7 +85,7 @@ func ReadFile(fsys fs.FS, path string) (File, error) {
 	var f File
 	switch ext {
 	default:
-		return File{}, errors.Errorf("z18n.msgfile.ReadFile: unknown file type %q in %q", ext, path)
+		return File{}, errors.Errorf("msgfile.ReadFile: unknown file type %q in %q", ext, path)
 	case "toml":
 		_, err = toml.DecodeReader(fp, &f)
 	}
@@ -94,6 +95,13 @@ func ReadFile(fsys fs.FS, path string) (File, error) {
 
 	f.Path = path
 	return f, nil
+}
+
+// FromTOML reads a message file from a TOML string.
+func FromTOML(t string) (File, error) {
+	var f File
+	_, err := toml.Decode(t, &f)
+	return f, errors.Wrap(err, "msgfile.ReadFile")
 }
 
 // WriteTo writes out a message file.
@@ -118,6 +126,22 @@ func (e Entries) Merge(src Entries) {
 	}
 }
 
+// Equal reports if all entries in cmp are equal.
+func (e Entries) Equal(cmp Entries) bool {
+	return reflect.DeepEqual(e, cmp)
+}
+
+// Untranslated reports the number of untranslated messages.
+func (e Entries) Untranslated() int {
+	var n int
+	for _, ee := range e {
+		if ee.Empty() {
+			n++
+		}
+	}
+	return n
+}
+
 // Sorted returns a list of entries sorted by ID.
 func (e Entries) Sorted() []Entry {
 	ord := make([]Entry, 0, len(e))
@@ -126,6 +150,11 @@ func (e Entries) Sorted() []Entry {
 	}
 	sort.Slice(ord, func(i, j int) bool { return ord[i].ID < ord[j].ID })
 	return ord
+}
+
+// Empty reports if all messages are empty.
+func (e Entry) Empty() bool {
+	return e.Default == "" && e.Zero == "" && e.One == "" && e.Two == "" && e.Few == "" && e.Many == ""
 }
 
 var reIndent = regexp.MustCompile(`\n[ \t]+`)
