@@ -2,6 +2,7 @@ package z18n
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"strconv"
 	"strings"
@@ -67,7 +68,7 @@ func (t tag) Open() string {
 }
 func (t tag) Close() string  { return "</" + t.tag + ">" }
 func (t tag) Text() string   { return t.innerHTML }
-func (t tag) String() string { return t.Open() + t.Text() + t.Close() }
+func (t tag) String() string { return t.Open() + html.EscapeString(t.Text()) + t.Close() }
 
 // Tag creates a new tag.
 func Tag(tagName, content string, innerHTML ...string) tag {
