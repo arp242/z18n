@@ -6,10 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template/parse"
 
 	"zgo.at/zstd/zfilepath"
 	"zgo.at/zstd/zstring"
-	"zgo.at/ztpl/parse"
+	"zgo.at/ztpl"
 )
 
 // FindTemplate finds all strings in Go templates.
@@ -28,13 +29,13 @@ func FindTemplate(dir string, ext []string, funs ...string) (Entries, error) {
 			return err
 		}
 
-		tree, err := parse.Parse("", string(data), parse.ParseRelaxFunctions|parse.ParseComments, "{{", "}}")
+		tree, err := ztpl.Parse("", string(data), parse.SkipFuncCheck|parse.ParseComments, "{{", "}}")
 		if err != nil {
 			return fmt.Errorf("parsing %q: %w", path, err)
 		}
 
 		comment := ""
-		parse.Visit(tree[""].Root, func(n parse.Node, _ int) bool {
+		ztpl.Visit(tree[""].Root, func(n parse.Node, _ int) bool {
 			if _, ok := n.(*parse.TextNode); ok {
 				return true
 			}

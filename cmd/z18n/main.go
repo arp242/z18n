@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -110,10 +111,15 @@ func main() {
 		return
 	}
 
-	switch f.ShiftCommand("help", "find", "new", "update", "check") {
-	case zli.CommandAmbiguous, zli.CommandUnknown:
-		zli.Fatalf("unknown command")
-	case "help", zli.CommandNoneGiven:
+	switch cmd, err := f.ShiftCommand("help", "find", "new", "update", "check"); cmd {
+	case "":
+		if errors.Is(err, zli.ErrCommandNoneGiven{}) {
+			fmt.Print(usage)
+			return
+		}
+
+		zli.Fatalf("unknown command: %q", cmd)
+	case "help":
 		fmt.Print(usage)
 
 	case "find":
