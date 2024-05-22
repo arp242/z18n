@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -162,10 +163,10 @@ var reIndent = regexp.MustCompile(`\n[ \t]+`)
 // Normalize the indent: remove leading/trailing whitespace and remove all
 // whitespace at the start of every line. This allows doing stuff like:
 //
-//    z18n.T(`
-//          Some message that's indented nicely in Go
-//          But you don't really want this indent to show up.
-//    `)
+//	z18n.T(`
+//	      Some message that's indented nicely in Go
+//	      But you don't really want this indent to show up.
+//	`)
 func normalizeMessage(msg string) string {
 	msg = strings.TrimSpace(msg)
 	msg = reIndent.ReplaceAllString(msg, "\n")
@@ -180,9 +181,9 @@ type param struct {
 // TODO: need to parse the params from both Go and Template and convert to
 // something we can pass here, so we don't need to duplicate the logic.
 //
-//   typeCheck("foo/bar", "hello %(world)", MapParam{keys: []string{...}, types: LiteralParam{}, TagParam{}}, PluralParam{})
-//   typeCheck("foo/bar", "hello %(world)", LiteralParam{})
-//   typeCheck("foo/bar", "hello %[world asd]", TagParam{})
+//	typeCheck("foo/bar", "hello %(world)", MapParam{keys: []string{...}, types: LiteralParam{}, TagParam{}}, PluralParam{})
+//	typeCheck("foo/bar", "hello %(world)", LiteralParam{})
+//	typeCheck("foo/bar", "hello %[world asd]", TagParam{})
 //
 // 1. Grep the %() and %[] out of there
 // 2. Check syntax of %[word text]
@@ -235,7 +236,7 @@ func typeCheck(id, msg string, params ...param) error {
 		for _, p := range vars {
 			start, end := p[0], p[1]
 			varname := msg[start+2 : end]
-			if !zstring.Contains(mapKeys, varname) {
+			if !slices.Contains(mapKeys, varname) {
 				errs.Append(fmt.Errorf("not in map: %q", varname))
 			}
 		}

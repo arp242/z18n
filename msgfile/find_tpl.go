@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template/parse"
 
@@ -76,7 +77,7 @@ func FindTemplate(dir string, ext []string, funs ...string) (Entries, error) {
 					name = name[1:]
 				}
 			}
-			if !zstring.Contains(funs, name) {
+			if !slices.Contains(funs, name) {
 				comment = ""
 				return false
 			}
@@ -89,7 +90,7 @@ func FindTemplate(dir string, ext []string, funs ...string) (Entries, error) {
 					return false
 				}
 			}
-			id, def := zstring.Split2(idlit.Text, "|")
+			id, def, _ := strings.Cut(idlit.Text, "|")
 
 			// if def != "" && errors.Append(typeCheck(id, def)) {
 			//    return false

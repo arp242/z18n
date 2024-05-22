@@ -110,7 +110,7 @@ func (m Msg) tplTags(str string, pairs [][]int) string {
 		text := str[start+2 : end]
 		varname := ""
 		if len(text) > 0 && text[0] == '%' {
-			varname, text = zstring.Split2(text, " ")
+			varname, text, _ = strings.Cut(text, " ")
 			varname = varname[1:]
 		}
 
@@ -161,7 +161,7 @@ var funcmap = map[string]func(string) string{
 func (m Msg) tplVars(l *Locale, str string, pairs [][]int) string {
 	for _, p := range pairs {
 		start, end := p[0], p[1]
-		varname, fun := zstring.Split2(str[start+2:end], " ")
+		varname, fun, _ := strings.Cut(str[start+2:end], " ")
 
 		var (
 			funs []string

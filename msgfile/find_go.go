@@ -7,12 +7,12 @@ import (
 	"go/printer"
 	"go/token"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
 	"zgo.at/errors"
 	"zgo.at/zstd/zfilepath"
-	"zgo.at/zstd/zstring"
 )
 
 // Go finds all translatable strings in dir.
@@ -84,6 +84,9 @@ func FindGo(dir string, funs ...string) (Entries, error) {
 				case *ast.IndexExpr: // someMap[T(..)]
 					// TODO
 					return true
+				case *ast.IndexListExpr: // zcache2.New[int, int](0, 0)
+					// TODO
+					return true
 				default:
 					pos := p.Fset.Position(c.Pos())
 					text := new(bytes.Buffer)
@@ -92,7 +95,7 @@ func FindGo(dir string, funs ...string) (Entries, error) {
 						c.Fun, pos.Filename, pos.Line, text.String()))
 				}
 
-				if !zstring.Contains(funs, name) {
+				if !slices.Contains(funs, name) {
 					comment = ""
 					return true
 				}
@@ -115,7 +118,7 @@ func FindGo(dir string, funs ...string) (Entries, error) {
 					}
 				}
 
-				id, def := zstring.Split2(strings.Trim(idlit.Value, quotes), "|")
+				id, def, _ := strings.Cut(strings.Trim(idlit.Value, quotes), "|")
 
 				// if def != "" && errors.Append(typeCheck(id, def)) {
 				//    return false

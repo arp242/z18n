@@ -12,7 +12,6 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"golang.org/x/text/number"
-	"zgo.at/zstd/zstring"
 )
 
 var ctxkey = &struct{}{}
@@ -248,7 +247,7 @@ func l10n(l *Locale, tag language.Tag, v interface{}, modifiers map[string]strin
 	case reflect.Float64:
 		var opts []number.Option
 		if f, ok := modifiers[""]; ok {
-			min, max := zstring.Split2(f, ":")
+			min, max, _ := strings.Cut(f, ":")
 
 			var maxi, mini int
 			if max == "" { // TODO: error?

@@ -3,11 +3,11 @@ package z18n
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/text/language"
-	"zgo.at/zstd/zstring"
 )
 
 func mkbundle() *Bundle {
@@ -233,12 +233,12 @@ func TestL10n(t *testing.T) {
 
 // Cascade rules:
 //
-// 1. User has one or more prefered languages, check every one of thise.
-//    First match wins.
-//    e.g. "nl-NL" "en-US", "en-GB"
+//  1. User has one or more prefered languages, check every one of thise.
+//     First match wins.
+//     e.g. "nl-NL" "en-US", "en-GB"
 //
-// 2. No matches? Check the parents.
-//    e.g. "nl" "en"
+//  2. No matches? Check the parents.
+//     e.g. "nl" "en"
 func TestCascade(t *testing.T) {
 	en := language.MustParse("en")
 	enUS := language.MustParse("en-US")
@@ -298,7 +298,7 @@ func TestLocaleFromEnv(t *testing.T) {
 	restore := func() {
 		os.Clearenv()
 		for _, e := range env {
-			k, v := zstring.Split2(e, "=")
+			k, v, _ := strings.Cut(e, "=")
 			err := os.Setenv(k, v)
 			if err != nil {
 				panic(err)
