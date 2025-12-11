@@ -16,7 +16,7 @@ type (
 	//  cldr-core/availableLocales.json
 	Locales struct {
 		AvailableLocales struct {
-			Modern []string `json:"modern"`
+			Full []string `json:"full"`
 		} `json:"availableLocales"`
 	}
 
@@ -32,7 +32,7 @@ type (
 		} `json:"supplemental"`
 	}
 
-	// cldr-dates-modern/main/*/ca-gregorian.json
+	// cldr-dates-full/main/*/ca-gregorian.json
 	Dates struct {
 		Main map[string]struct { // Key is locale name, "nl" or "en-NZ"
 			Identity struct {
@@ -70,11 +70,12 @@ type (
 				} `json:"abbreviated"`
 			} `json:"format"`
 		} `json:"dayPeriods"`
+
 		DateFormats struct {
-			Full   string `json:"full"`
-			Long   string `json:"long"`
-			Medium string `json:"medium"`
-			Short  string `json:"short"`
+			Full   string          `json:"full"`
+			Long   string          `json:"long"`
+			Medium string          `json:"medium"`
+			Short  json.RawMessage `json:"short"`
 		} `json:"dateFormats"`
 		TimeFormats struct {
 			Full   string `json:"full"`
@@ -104,8 +105,8 @@ type (
 	// 	} `json:"plurals-type-ordinal"`
 	// }
 
-	// TODO cldr-misc-modern/main/nl/contextTransforms.json
-	// TODO cldr-misc-modern/main/nl/delimiters.json
+	// TODO cldr-misc-full/main/nl/contextTransforms.json
+	// TODO cldr-misc-full/main/nl/delimiters.json
 	// TODO cldr-rbnf/rbnf
 
 	All struct {
@@ -114,6 +115,27 @@ type (
 		Calendar                 Gregorian
 	}
 )
+
+// Can be string or object as {"_value": "d/M/yy", "_numbers": "M=romanlow"}
+func shortString(b json.RawMessage) string {
+	if len(b) == 0 {
+		return ""
+	}
+
+	if b[0] == '"' {
+		var s string
+		err := json.Unmarshal(b, &s)
+		F(err)
+		return s
+	}
+
+	var s struct {
+		Value string `json:"_value"`
+	}
+	err := json.Unmarshal(b, &s)
+	F(err)
+	return s.Value
+}
 
 // Use the JSON data because the XML is a pain to parse.
 //
@@ -128,9 +150,9 @@ func main() {
 	readJSON(&weekData, "cldr-core/supplemental/weekData.json")
 
 	var all []All
-	for _, l := range locales.AvailableLocales.Modern {
+	for _, l := range locales.AvailableLocales.Full {
 		var dates Dates
-		readJSON(&dates, "cldr-dates-modern/main/"+l+"/ca-gregorian.json")
+		readJSON(&dates, "cldr-dates-full/main/"+l+"/ca-gregorian.json")
 
 		all = append(all, All{
 			Language: dates.Main[l].Identity.Language,
@@ -151,7 +173,7 @@ func main() {
 		c.DateTimeFormats.Full = strings.ReplaceAll(c.DateTimeFormats.Full, "{1}", c.DateFormats.Full)
 		c.DateTimeFormats.Long = strings.ReplaceAll(c.DateTimeFormats.Long, "{1}", c.DateFormats.Long)
 		c.DateTimeFormats.Medium = strings.ReplaceAll(c.DateTimeFormats.Medium, "{1}", c.DateFormats.Medium)
-		c.DateTimeFormats.Short = strings.ReplaceAll(c.DateTimeFormats.Short, "{1}", c.DateFormats.Short)
+		c.DateTimeFormats.Short = strings.ReplaceAll(c.DateTimeFormats.Short, "{1}", shortString(c.DateFormats.Short))
 
 		n, ok := weekData.Supplemental.WeekData.FirstDay[all[i].Region]
 		if !ok {
@@ -201,7 +223,7 @@ import "golang.org/x/text/language"
 
 var mapping = map[language.Tag]*localize {
 `)
-	for _, l := range locales.AvailableLocales.Modern {
+	for _, l := range locales.AvailableLocales.Full {
 		f := strings.ReplaceAll(l, "-", "_")
 		_, ok := show[l]
 		if ok {
@@ -220,7 +242,7 @@ var mapping = map[language.Tag]*localize {
 
 	out.WriteString("}\n\n")
 
-	for _, l := range locales.AvailableLocales.Modern {
+	for _, l := range locales.AvailableLocales.Full {
 		code, ok := show[l]
 		if !ok {
 			continue
@@ -239,8 +261,13 @@ var mapping = map[language.Tag]*localize {
 
 func readJSON(dst interface{}, file string) {
 	data, err := os.ReadFile("cldr-json/cldr-json/" + file)
-	F(err)
-	F(json.Unmarshal(data, dst))
+	if err != nil {
+		F(fmt.Errorf("reading %q: %s", file, err))
+	}
+	err = json.Unmarshal(data, dst)
+	if err != nil {
+		F(fmt.Errorf("reading %q: %s", file, err))
+	}
 }
 
 func F(err error) {
@@ -284,7 +311,7 @@ func makeFun(a All) string {
 		days(c.Days.Format.Abbreviated), days(c.Days.Format.Wide))
 
 	fmt.Fprintf(b, "timeFormat: timeFormat{\ndate: %s,\ntime: %s,\ndatetime: %s,\n},\n",
-		dateformats(c.DateFormats.Full, c.DateFormats.Long, c.DateFormats.Medium, c.DateFormats.Short),
+		dateformats(c.DateFormats.Full, c.DateFormats.Long, c.DateFormats.Medium, shortString(c.DateFormats.Short)),
 		dateformats(c.TimeFormats.Full, c.TimeFormats.Long, c.TimeFormats.Medium, c.TimeFormats.Short),
 		dateformats(c.DateTimeFormats.Full, c.DateTimeFormats.Long, c.DateTimeFormats.Medium, c.DateTimeFormats.Short))
 	b.WriteString("}")
