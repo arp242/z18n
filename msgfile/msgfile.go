@@ -2,12 +2,10 @@
 package msgfile
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"reflect"
 	"regexp"
-	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -15,7 +13,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"zgo.at/errors"
 	"zgo.at/zstd/zfilepath"
-	"zgo.at/zstd/zstring"
 )
 
 const (
@@ -88,7 +85,7 @@ func ReadFile(fsys fs.FS, path string) (File, error) {
 	default:
 		return File{}, errors.Errorf("msgfile.ReadFile: unknown file type %q in %q", ext, path)
 	case "toml":
-		_, err = toml.DecodeReader(fp, &f)
+		_, err = toml.NewDecoder(fp).Decode(&f)
 	}
 	if err != nil {
 		return f, errors.Wrap(err, "msgfile.ReadFile")
@@ -173,10 +170,10 @@ func normalizeMessage(msg string) string {
 	return msg
 }
 
-type param struct {
-	kind string   // map, plural, literal, tag
-	keys []string // only for map
-}
+// type param struct {
+// 	kind string   // map, plural, literal, tag
+// 	keys []string // only for map
+// }
 
 // TODO: need to parse the params from both Go and Template and convert to
 // something we can pass here, so we don't need to duplicate the logic.
@@ -188,65 +185,65 @@ type param struct {
 // 1. Grep the %() and %[] out of there
 // 2. Check syntax of %[word text]
 // 3. Check if it matches with that we expect in params
-func typeCheck(id, msg string, params ...param) error {
-	if msg == "" {
-		return nil
-	}
-
-	var (
-		tags                      = zstring.IndexPairs(msg, "%[", "]")
-		vars                      = zstring.IndexPairs(msg, "%(", ")")
-		mapKeys                   []string
-		nPlural, nMap, nLit, nTag int
-		//total                     = len(tags) + len(vars)
-	)
-	for _, p := range params {
-		switch p.kind {
-		case "plural":
-			nPlural++
-		case "map":
-			nMap++
-			mapKeys = p.keys
-		case "literal":
-			nLit++
-		case "tag":
-			nTag++
-		}
-	}
-
-	errs := errors.NewGroup(10)
-	if nPlural > 1 {
-		errs.Append(errors.New("more than one plural parameter"))
-	}
-	if nMap > 1 {
-		errs.Append(errors.New("more than one map parameter"))
-	}
-	if nLit > 1 {
-		errs.Append(errors.New("more than one literal parameter"))
-	}
-	if nMap > 0 && nLit > 0 {
-		errs.Append(errors.New("both literal and map parameter"))
-	}
-	if nTag != len(tags) {
-		errs.Append(fmt.Errorf("wrong number of tag parameters; %d in string but %d parameters", len(tags), nTag))
-	}
-
-	// TODO: also check if there's stuff in the map that's not used.
-	if len(vars) > 1 {
-		for _, p := range vars {
-			start, end := p[0], p[1]
-			varname := msg[start+2 : end]
-			if !slices.Contains(mapKeys, varname) {
-				errs.Append(fmt.Errorf("not in map: %q", varname))
-			}
-		}
-	}
-
-	// TODO: check tag names
-	//for _, p := range tags {
-	//	start, end := p[0], p[1]
-	//	text := str[start+2 : end]
-	//	varname, text := zstring.Split2(text, " ")
-
-	return errs.ErrorOrNil()
-}
+// func typeCheck(id, msg string, params ...param) error {
+// 	if msg == "" {
+// 		return nil
+// 	}
+//
+// 	var (
+// 		tags                      = zstring.IndexPairs(msg, "%[", "]")
+// 		vars                      = zstring.IndexPairs(msg, "%(", ")")
+// 		mapKeys                   []string
+// 		nPlural, nMap, nLit, nTag int
+// 		//total                     = len(tags) + len(vars)
+// 	)
+// 	for _, p := range params {
+// 		switch p.kind {
+// 		case "plural":
+// 			nPlural++
+// 		case "map":
+// 			nMap++
+// 			mapKeys = p.keys
+// 		case "literal":
+// 			nLit++
+// 		case "tag":
+// 			nTag++
+// 		}
+// 	}
+//
+// 	errs := errors.NewGroup(10)
+// 	if nPlural > 1 {
+// 		errs.Append(errors.New("more than one plural parameter"))
+// 	}
+// 	if nMap > 1 {
+// 		errs.Append(errors.New("more than one map parameter"))
+// 	}
+// 	if nLit > 1 {
+// 		errs.Append(errors.New("more than one literal parameter"))
+// 	}
+// 	if nMap > 0 && nLit > 0 {
+// 		errs.Append(errors.New("both literal and map parameter"))
+// 	}
+// 	if nTag != len(tags) {
+// 		errs.Append(fmt.Errorf("wrong number of tag parameters; %d in string but %d parameters", len(tags), nTag))
+// 	}
+//
+// 	// TODO: also check if there's stuff in the map that's not used.
+// 	if len(vars) > 1 {
+// 		for _, p := range vars {
+// 			start, end := p[0], p[1]
+// 			varname := msg[start+2 : end]
+// 			if !slices.Contains(mapKeys, varname) {
+// 				errs.Append(fmt.Errorf("not in map: %q", varname))
+// 			}
+// 		}
+// 	}
+//
+// 	// TODO: check tag names
+// 	//for _, p := range tags {
+// 	//	start, end := p[0], p[1]
+// 	//	text := str[start+2 : end]
+// 	//	varname, text := zstring.Split2(text, " ")
+//
+// 	return errs.ErrorOrNil()
+// }

@@ -126,11 +126,11 @@ func infof(format string, args ...interface{}) {
 
 var verbose bool
 
-func verbosef(format string, args ...interface{}) {
-	if verbose {
-		infof(format, args...)
-	}
-}
+// func verbosef(format string, args ...interface{}) {
+// 	if verbose {
+// 		infof(format, args...)
+// 	}
+// }
 
 func fatalf(format string, args ...interface{}) {
 	infof("fatal: "+format+"\n", args...)

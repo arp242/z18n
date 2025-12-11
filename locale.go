@@ -263,6 +263,7 @@ func l10n(l *Locale, tag language.Tag, v interface{}, modifiers map[string]strin
 			opts = append(opts, number.NoSeparator())
 		}
 		if _, ok := modifiers["$"]; ok {
+			_ = ok
 			// TODO: this is actually not so great:
 			//
 			// - Always prints as "€ 5.00", but just "€ 5" is okay.

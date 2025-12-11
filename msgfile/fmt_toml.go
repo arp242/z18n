@@ -72,13 +72,15 @@ func asString(i interface{}) string {
 	}
 	return ""
 }
-func asBool(i interface{}) bool {
-	b, ok := i.(bool)
-	if ok {
-		return false
-	}
-	return b
-}
+
+//	func asBool(i interface{}) bool {
+//		b, ok := i.(bool)
+//		if ok {
+//			return false
+//		}
+//		return b
+//	}
+
 func asStringSlice(i interface{}) []string {
 	ii, ok := i.([]interface{})
 	if !ok {
