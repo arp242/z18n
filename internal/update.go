@@ -81,20 +81,23 @@ func Update(dir string) error {
 
 // We have two sets of translation strings:
 //
-//   1. The "template file"; that is, the output of a current "z18n find".
-//   2. A translation file.
+//  1. The "template file"; that is, the output of a current "z18n find".
+//  2. A translation file.
 //
 // What we want to do is update the translation file so that:
 //
-//   1. Any translation strings that are no longer used should be marked as such.
-//   2. Any new translation strings should be added.
-//   3. Make sure the loc array is up-to-date.
-//   4. Any changes from the new and old "z18n find" output should be marked.
-//      TODO: not implemmented; actually not sure we want/need this, as minor
-//      typo corrections don't need a new translation.
+//  1. Any translation strings that are no longer used should be marked as such.
 //
-//      Can just mark them manually if the changes are large enough to warrant a
-//      check by translators.
+//  2. Any new translation strings should be added.
+//
+//  3. Make sure the loc array is up-to-date.
+//
+//  4. Any changes from the new and old "z18n find" output should be marked.
+//     TODO: not implemmented; actually not sure we want/need this, as minor
+//     typo corrections don't need a new translation.
+//
+//     Can just mark them manually if the changes are large enough to warrant a
+//     check by translators.
 func mergeFile(tpl msgfile.File, merge *msgfile.File) {
 	// Add new entries.
 	for k, tplV := range tpl.Strings {

@@ -113,13 +113,13 @@ func (b *Bundle) Locale(langs ...string) *Locale {
 //
 // Variables currently used:
 //
-//   LANGUAGES       Colon-separated list of locales
-//   LANG            Default language (one value)
-//   LC_COLLATE      Sorting collation
-//   LC_MESSAGES     Which messages to use
-//   LC_NUMERIC      Number formating
-//   LC_TIME         Date/time formatting
-//   LC_ALL          All of the above.
+//	LANGUAGES       Colon-separated list of locales
+//	LANG            Default language (one value)
+//	LC_COLLATE      Sorting collation
+//	LC_MESSAGES     Which messages to use
+//	LC_NUMERIC      Number formating
+//	LC_TIME         Date/time formatting
+//	LC_ALL          All of the above.
 //
 // Lookup order is LC_ALL, LC_*, LANGUAGES (for LC_MESSAGES), and then LANG. The
 // first match wins. So if LC_ALL is set that will just override everything and

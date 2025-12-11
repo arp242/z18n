@@ -7,35 +7,35 @@ import "reflect"
 // This reduces the Go types a limited set of values, making type switches a bit
 // easier.
 //
-//    everything else       No conversation, return as-is.
-//    bool                  reflect.Bool
-//    complex*              reflect.Complex128
-//    int*, uint*, float*   reflect.Float64; as floats are reliable for natural
-//                          numbers up to ~9e15 (9,007,199 billion) just
-//                          converting it to a float will be fine in most use
-//                          cases.
-//    string, []byte        reflect.String; note this also matches []uint8 and []uint32,
-//            []rune        as byte and rune are just aliases for that with no way to
-//                          distinguish between the two.
+//	everything else       No conversation, return as-is.
+//	bool                  reflect.Bool
+//	complex*              reflect.Complex128
+//	int*, uint*, float*   reflect.Float64; as floats are reliable for natural
+//	                      numbers up to ~9e15 (9,007,199 billion) just
+//	                      converting it to a float will be fine in most use
+//	                      cases.
+//	string, []byte        reflect.String; note this also matches []uint8 and []uint32,
+//	        []rune        as byte and rune are just aliases for that with no way to
+//	                      distinguish between the two.
 //
 // The practical value of this is that it makes it a lot easier to deal with
 // different types:
 //
-//     switch vv, t := simplify(v); t {
-//     case reflect.String:
-//         ..
-//     case reflect.Float64:
-//         ..
-//     case reflect.Bool:
-//         ..
-//     case reflect.Complex128:
-//         ..
+//	switch vv, t := simplify(v); t {
+//	case reflect.String:
+//	    ..
+//	case reflect.Float64:
+//	    ..
+//	case reflect.Bool:
+//	    ..
+//	case reflect.Complex128:
+//	    ..
 //
-//     default:
-//         if vv.Type() != reflect.TypeOf(time.Time{}) {
-//             return vv.String()
-//         }
-//     }
+//	default:
+//	    if vv.Type() != reflect.TypeOf(time.Time{}) {
+//	        return vv.String()
+//	    }
+//	}
 func simplify(value interface{}) (reflect.Value, reflect.Kind) {
 	v := reflect.ValueOf(value)
 	// Actually, this causes problems with some types, like time.Time

@@ -2,6 +2,8 @@ package z18n
 
 import (
 	"bytes"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -11,16 +13,58 @@ import (
 	"golang.org/x/text/language"
 	"zgo.at/z18n/internal"
 	"zgo.at/z18n/msgfile"
-	"zgo.at/zstd/zio"
 	"zgo.at/zstd/ztest"
 )
+
+func copyTree(t *testing.T, src, dst string) {
+	src, err := filepath.Abs(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dst, err = filepath.Abs(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = filepath.Walk(src, func(srcpath string, fi fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		dstpath := strings.ReplaceAll(srcpath, src, dst)
+		if fi.IsDir() {
+			return os.MkdirAll(dstpath, fi.Mode())
+		}
+
+		srcfp, err := os.Open(srcpath)
+		if err != nil {
+			return err
+		}
+		defer srcfp.Close()
+
+		dstfp, err := os.Create(dstpath)
+		if err != nil {
+			return err
+		}
+		defer dstfp.Close()
+
+		_, err = io.Copy(dstfp, srcfp)
+		if err != nil {
+			return err
+		}
+
+		return dstfp.Close()
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestWorkflow(t *testing.T) {
 	// Setup.
 	tmp := t.TempDir()
-	if err := zio.CopyTree("./testdata/testapp", tmp, nil); err != nil {
-		t.Fatal(err)
-	}
+	copyTree(t, "./testdata/testapp", tmp)
+
 	dir := filepath.Join(tmp, "i18n")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
