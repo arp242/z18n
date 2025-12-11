@@ -120,15 +120,16 @@ func mergeFile(tpl msgfile.File, merge *msgfile.File) {
 	// Remove entries not in tpl, mark changed entries, and update loc.
 	for k, mergeV := range merge.Strings {
 		tplV, ok := tpl.Strings[k]
-		if ok {
-			mergeV.Loc = tplV.Loc
-			mergeV.Context = tplV.Context
-			mergeV.Updated = ""
-			if tplV.Updated == msgfile.UpdatedChanged {
-				mergeV.Updated = msgfile.UpdatedChanged
-			}
-		} else {
-			mergeV.Updated = msgfile.UpdatedRemoved
+		if !ok {
+			delete(merge.Strings, k)
+			continue
+		}
+
+		mergeV.Loc = tplV.Loc
+		mergeV.Context = tplV.Context
+		mergeV.Updated = ""
+		if tplV.Updated == msgfile.UpdatedChanged {
+			mergeV.Updated = msgfile.UpdatedChanged
 		}
 		merge.Strings[k] = mergeV
 	}

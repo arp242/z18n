@@ -64,7 +64,6 @@ func TestWorkflow(t *testing.T) {
 	// Setup.
 	tmp := t.TempDir()
 	copyTree(t, "./testdata/testapp", tmp)
-
 	dir := filepath.Join(tmp, "i18n")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
@@ -191,12 +190,6 @@ func TestWorkflow(t *testing.T) {
 					"package-var-in-map-2":   {"default": "English translation of package-var-in-map-2"},
 					"with-context-1":         {"default": "English translation of with-context-1"},
 					"with-context-2":         {"default": "English translation of with-context-2"},
-					"package-var": {
-						"id":      "package-var",
-						"unused":  "",
-						"loc":     "testapp.go:5",
-						"default": "English translation of package-var",
-					},
 				}),
 			},
 			"nl-NL.toml": {
@@ -213,12 +206,6 @@ func TestWorkflow(t *testing.T) {
 					"package-var-in-map-2":   {"default": "Nederlandse vertaling van package-var-in-map-2"},
 					"with-context-1":         {"default": "Nederlandse vertaling van with-context-1"},
 					"with-context-2":         {"default": "Nederlandse vertaling van with-context-2"},
-					"package-var": {
-						"id":      "package-var",
-						"unused":  "",
-						"loc":     "testapp.go:5",
-						"default": "Nederlandse vertaling van package-var",
-					},
 				}),
 			},
 		}
@@ -282,7 +269,7 @@ func merge(dst msgfile.Entries, src map[string]map[string]string) msgfile.Entrie
 			case "default":
 				d.Default = vv
 			case "unused":
-				d.Updated = msgfile.UpdatedRemoved
+				continue
 			case "changed":
 				d.Updated = msgfile.UpdatedChanged
 			}
