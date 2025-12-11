@@ -170,15 +170,15 @@ func TestWorkflow(t *testing.T) {
 
 		wantF := map[string]msgfile.File{
 			"template.toml": {
-				Template:  true,
-				Language:  "en-GB",
-				Generated: tpl.Generated,
-				Options:   tpl.Options,
-				Strings:   wantTpl,
+				Template: true,
+				Language: "en-GB",
+				Modified: tpl.Modified,
+				Options:  tpl.Options,
+				Strings:  wantTpl,
 			},
 			"en-GB.toml": {
-				Language:  "en-GB",
-				Generated: en.Generated,
+				Language: "en-GB",
+				Modified: en.Modified,
 				Strings: merge(wantTpl, map[string]map[string]string{
 					"tpl-1":                  {"default": "English translation of tpl-1"},
 					"tpl-2":                  {"default": "English translation of tpl-2"},
@@ -193,8 +193,8 @@ func TestWorkflow(t *testing.T) {
 				}),
 			},
 			"nl-NL.toml": {
-				Language:  "nl-NL",
-				Generated: nl.Generated,
+				Language: "nl-NL",
+				Modified: nl.Modified,
 				Strings: merge(wantTpl, map[string]map[string]string{
 					"tpl-1":                  {"default": "Nederlandse vertaling van tpl-1"},
 					"tpl-2":                  {"default": "Nederlandse vertaling van tpl-2"},

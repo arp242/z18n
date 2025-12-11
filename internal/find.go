@@ -19,9 +19,9 @@ func Find(paths []string, lang, format string, fun, tplFun, tplExt []string) (st
 	}
 
 	file := msgfile.File{
-		Template:  true,
-		Language:  lang,
-		Generated: time.Now().UTC().Round(time.Second),
+		Template: true,
+		Language: lang,
+		Modified: time.Now().UTC().Round(time.Second),
 		Options: map[string]interface{}{
 			"paths":    paths,
 			"language": lang,

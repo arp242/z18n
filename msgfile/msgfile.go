@@ -30,7 +30,7 @@ type (
 		NoUpdate bool `toml:"no-update,omitempty" json:"no_update,omitempty"`
 
 		// Updated date.
-		Generated time.Time `toml:"generated,omitempty" json:"generated,omitempty"`
+		Modified time.Time `toml:"generated,omitempty" json:"generated,omitempty"`
 
 		// Language this is for.
 		Language string `toml:"language" json:"language"`

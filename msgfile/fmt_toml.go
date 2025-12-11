@@ -26,8 +26,8 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 			f.Template = v.(bool)
 		case "no-update":
 			f.NoUpdate = v.(bool)
-		case "generated":
-			f.Generated = v.(time.Time)
+		case "modified":
+			f.Modified = v.(time.Time)
 		case "language":
 			f.Language = v.(string)
 		case "comments":
@@ -98,8 +98,8 @@ func asStringSlice(i interface{}) []string {
 // TODO: Implement MarshalTOML instead.
 func (f File) TOML() (string, error) {
 	meta := map[string]interface{}{
-		"generated": f.Generated,
-		"language":  f.Language,
+		"modified": f.Modified,
+		"language": f.Language,
 	}
 	if f.Template {
 		meta["template"] = f.Template
