@@ -42,7 +42,7 @@ type (
 		Comments string `toml:"comments" json:"comments"`
 
 		// CLI options; only if template=true.
-		Options map[string]interface{} `toml:"options,omitempty" json:"options,omitempty"`
+		Options map[string]any `toml:"options,omitempty" json:"options,omitempty"`
 
 		// Translate strings.
 		Strings Entries `toml:"strings" json:"strings"`

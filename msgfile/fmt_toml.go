@@ -11,8 +11,8 @@ import (
 )
 
 // Custom unmarshal to treat __meta__ as special.
-func (f *File) UnmarshalTOML(d interface{}) error {
-	m := d.(map[string]interface{})
+func (f *File) UnmarshalTOML(d any) error {
+	m := d.(map[string]any)
 	meta := m["__meta__"]
 	delete(m, "__meta__")
 
@@ -20,7 +20,7 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 		return errors.New("no __meta__ table")
 	}
 
-	for k, v := range meta.(map[string]interface{}) {
+	for k, v := range meta.(map[string]any) {
 		switch k {
 		case "template":
 			f.Template = v.(bool)
@@ -33,20 +33,20 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 		case "comments":
 			f.Comments = v.(string)
 		case "maintainers":
-			vv := v.([]interface{})
+			vv := v.([]any)
 			set := make([]string, 0, len(vv))
 			for _, s := range vv {
 				set = append(set, s.(string))
 			}
 			f.Maintainers = set
 		case "options":
-			f.Options = v.(map[string]interface{})
+			f.Options = v.(map[string]any)
 		}
 	}
 
 	f.Strings = make(Entries)
 	for k, v := range m {
-		vv := v.(map[string]interface{})
+		vv := v.(map[string]any)
 		e := Entry{
 			ID:      k,
 			Loc:     asStringSlice(vv["loc"]),
@@ -65,7 +65,7 @@ func (f *File) UnmarshalTOML(d interface{}) error {
 	return nil
 }
 
-func asString(i interface{}) string {
+func asString(i any) string {
 	s, ok := i.(string)
 	if ok {
 		return s
@@ -81,8 +81,8 @@ func asString(i interface{}) string {
 //		return b
 //	}
 
-func asStringSlice(i interface{}) []string {
-	ii, ok := i.([]interface{})
+func asStringSlice(i any) []string {
+	ii, ok := i.([]any)
 	if !ok {
 		return nil
 	}
@@ -97,7 +97,7 @@ func asStringSlice(i interface{}) []string {
 //
 // TODO: Implement MarshalTOML instead.
 func (f File) TOML() (string, error) {
-	meta := map[string]interface{}{
+	meta := map[string]any{
 		"modified": f.Modified,
 		"language": f.Language,
 	}
@@ -115,7 +115,7 @@ func (f File) TOML() (string, error) {
 	}
 
 	b := new(bytes.Buffer)
-	err := toml.NewEncoder(b).Encode(map[string]interface{}{"__meta__": meta})
+	err := toml.NewEncoder(b).Encode(map[string]any{"__meta__": meta})
 	if err != nil {
 		return "", err
 	}

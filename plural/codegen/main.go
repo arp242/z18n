@@ -120,7 +120,7 @@ func Test{{.Name}}(t *testing.T) {
 {{end}}
 `))
 
-func infof(format string, args ...interface{}) {
+func infof(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 }
 
@@ -132,7 +132,7 @@ var verbose bool
 // 	}
 // }
 
-func fatalf(format string, args ...interface{}) {
+func fatalf(format string, args ...any) {
 	infof("fatal: "+format+"\n", args...)
 	os.Exit(1)
 }

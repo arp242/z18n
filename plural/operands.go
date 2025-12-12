@@ -49,7 +49,7 @@ func (o *Operands) NModInRange(mod, from, to int64) bool {
 }
 
 // NewOperands returns the operands for number.
-func NewOperands(number interface{}) (*Operands, error) {
+func NewOperands(number any) (*Operands, error) {
 	switch number := number.(type) {
 	case int:
 		return newOperandsInt64(int64(number)), nil

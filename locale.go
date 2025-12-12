@@ -83,7 +83,7 @@ func Get(ctx context.Context) *Locale {
 }
 
 // T translates a string, like Locale.T. the Locale is fetched from the context.
-func T(ctx context.Context, id string, data ...interface{}) string {
+func T(ctx context.Context, id string, data ...any) string {
 	l := Get(ctx)
 	if l == nil {
 		return "%(z18n ERROR: T: no context)"
@@ -92,7 +92,7 @@ func T(ctx context.Context, id string, data ...interface{}) string {
 }
 
 // Thtml is like T, but returns template.HTML instead of a string.
-func Thtml(ctx context.Context, id string, data ...interface{}) template.HTML {
+func Thtml(ctx context.Context, id string, data ...any) template.HTML {
 	return template.HTML(T(ctx, id, data...))
 }
 
@@ -109,7 +109,7 @@ func Thtml(ctx context.Context, id string, data ...interface{}) template.HTML {
 // interface (such as Tag).
 //
 // Pass N() as any argument to apply pluralisation.
-func (l Locale) T(id string, data ...interface{}) string {
+func (l Locale) T(id string, data ...any) string {
 	def := ""
 	if p := strings.Index(id, "|"); p > -1 {
 		id, def = id[:p], id[p+1:]
@@ -132,7 +132,7 @@ func (l Locale) T(id string, data ...interface{}) string {
 			pl = &p
 		} else if p, ok := d.(P); ok {
 			params = p
-		} else if p, ok := d.(map[string]interface{}); ok {
+		} else if p, ok := d.(map[string]any); ok {
 			params = p
 		} else if p, ok := d.(map[string]string); ok {
 			for k, v := range p {
@@ -239,7 +239,7 @@ func (l localize) StartOfWeek() int { return int(l.firstDay) }
 func (l localize) TwentyFourHours() bool { return l.twentyFourHours }
 
 // TODO: support formatting telephone numbers (LC_TELEPHONE)
-func l10n(l *Locale, tag language.Tag, v interface{}, modifiers map[string]string) string {
+func l10n(l *Locale, tag language.Tag, v any, modifiers map[string]string) string {
 	switch vv, t := simplify(v); t {
 	case reflect.String:
 		return vv.String()

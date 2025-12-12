@@ -54,7 +54,7 @@ func TestT(t *testing.T) {
 	tests := []struct {
 		name   string
 		id     string
-		data   []interface{}
+		data   []any
 		wantEN string
 		wantNL string
 	}{
@@ -69,61 +69,61 @@ func TestT(t *testing.T) {
 
 		// Variables
 		{"variable",
-			"hello-loc", []interface{}{"z18n"}, "Hello, z18n!", "Hallo, z18n!"},
+			"hello-loc", []any{"z18n"}, "Hello, z18n!", "Hallo, z18n!"},
 		{"variable in default msg",
-			"|%(var)", []interface{}{"xx"}, "xx", "xx"},
+			"|%(var)", []any{"xx"}, "xx", "xx"},
 		{"variable in id",
 			"%(var)", nil, "%(var)", "%(var)"},
 		{"two variables",
-			"|%(var) %(bar)", []interface{}{P{"var": "xx", "bar": "yy"}}, "xx yy", "xx yy"},
+			"|%(var) %(bar)", []any{P{"var": "xx", "bar": "yy"}}, "xx yy", "xx yy"},
 
 		// Functions, HTML escape
-		{"upper", "|a%(var upper asd)!", []interface{}{"xx"}, "aXX!", "aXX!"},
-		{"html", "|%(var)", []interface{}{"<script>"}, "&lt;script&gt;", "&lt;script&gt;"},
-		{"html-raw", "|%(var raw)", []interface{}{"<script>"}, "<script>", "<script>"},
+		{"upper", "|a%(var upper asd)!", []any{"xx"}, "aXX!", "aXX!"},
+		{"html", "|%(var)", []any{"<script>"}, "&lt;script&gt;", "&lt;script&gt;"},
+		{"html-raw", "|%(var raw)", []any{"<script>"}, "<script>", "<script>"},
 
 		// Ints
-		{"int", "|%(n)", []interface{}{2}, "2", "2"},
-		{"int", "|%(n)", []interface{}{2000}, "2,000", "2.000"},
-		{"int", "|%(n)", []interface{}{2000000}, "2,000,000", "2.000.000"},
-		{"int", "|%(n raw)", []interface{}{2000000}, "2000000", "2000000"},
+		{"int", "|%(n)", []any{2}, "2", "2"},
+		{"int", "|%(n)", []any{2000}, "2,000", "2.000"},
+		{"int", "|%(n)", []any{2000000}, "2,000,000", "2.000.000"},
+		{"int", "|%(n raw)", []any{2000000}, "2000000", "2000000"},
 
 		// Floats
-		{"float", "|%(n)", []interface{}{2000.1565}, "2,000.157", "2.000,157"},
-		{"float", "|%(n raw)", []interface{}{2000.1565}, "2000.157", "2000,157"},
-		{"float", "|%(n 1)", []interface{}{2000.1565}, "2,000.2", "2.000,2"},
-		{"float", "|%(n 2 raw)", []interface{}{2000.1565}, "2000.16", "2000,16"},
-		{"float", "|%(n 10)", []interface{}{2000.1}, "2,000.1", "2.000,1"},
+		{"float", "|%(n)", []any{2000.1565}, "2,000.157", "2.000,157"},
+		{"float", "|%(n raw)", []any{2000.1565}, "2000.157", "2000,157"},
+		{"float", "|%(n 1)", []any{2000.1565}, "2,000.2", "2.000,2"},
+		{"float", "|%(n 2 raw)", []any{2000.1565}, "2000.16", "2000,16"},
+		{"float", "|%(n 10)", []any{2000.1}, "2,000.1", "2.000,1"},
 
 		// Time
-		{"time", "|%(t)", []interface{}{tUTC}, "18/06/1985, 3:42:30 PM", "18 jun. 1985 15:42:30"},
-		{"time", "|%(t)", []interface{}{tNZ}, "18/06/1985, 3:42:30 PM", "18 jun. 1985 15:42:30"},
-		{"time", "|%(t full)", []interface{}{tUTC},
+		{"time", "|%(t)", []any{tUTC}, "18/06/1985, 3:42:30 PM", "18 jun. 1985 15:42:30"},
+		{"time", "|%(t)", []any{tNZ}, "18/06/1985, 3:42:30 PM", "18 jun. 1985 15:42:30"},
+		{"time", "|%(t full)", []any{tUTC},
 			"Wednesday, 18 June 1985 at 3:42:30 PM UTC +0000",
 			"woensdag 18 juni 1985 om 15:42:30 UTC +0000"},
-		{"time", "|%(t full)", []interface{}{tNZ},
+		{"time", "|%(t full)", []any{tNZ},
 			"Wednesday, 18 June 1985 at 3:42:30 PM NZST +1200",
 			"woensdag 18 juni 1985 om 15:42:30 NZST +1200"},
 
-		{"time", "|%(t date)", []interface{}{tUTC}, "18/06/1985", "18 jun. 1985"},
-		{"time", "|%(t date short)", []interface{}{tUTC}, "18/06/85", "18-06-1985"},
-		{"time", "|%(t time)", []interface{}{tUTC}, "3:42:30 PM", "15:42:30"},
-		{"time", "|%(t time short)", []interface{}{tUTC}, "3:42 PM", "15:42"},
+		{"time", "|%(t date)", []any{tUTC}, "18/06/1985", "18 jun. 1985"},
+		{"time", "|%(t date short)", []any{tUTC}, "18/06/85", "18-06-1985"},
+		{"time", "|%(t time)", []any{tUTC}, "3:42:30 PM", "15:42:30"},
+		{"time", "|%(t time short)", []any{tUTC}, "3:42 PM", "15:42"},
 
-		{"time", "|%(t time Mon Jan)", []interface{}{tUTC}, "Wed Jun", "wo jun."},
+		{"time", "|%(t time Mon Jan)", []any{tUTC}, "Wed Jun", "wo jun."},
 
 		// Tags
 		{"tags",
-			"btn|%[Button]", []interface{}{Tag("a", `href="/foo"`)},
+			"btn|%[Button]", []any{Tag("a", `href="/foo"`)},
 			`<a href="/foo">Button</a>`, `<a href="/foo">Knop</a>`},
-		{"tags", "btn2", []interface{}{P{
+		{"tags", "btn2", []any{P{
 			"btn1": Tag("a", `href="/btn1"`),
 			"btn2": Tag("a", `href="/btn2"`),
 		}},
 			`Hello <a href="/btn1">Button</a>, <a href="/btn2">another</a> XX`,
 			`Hallo <a href="/btn1">Knop</a>, <a href="/btn2">nog een</a> XX`,
 		},
-		{"var inside html", "btn3|%[%btn Button %(var)]", []interface{}{P{
+		{"var inside html", "btn3|%[%btn Button %(var)]", []any{P{
 			"var": "X",
 			"btn": Tag("a", `href="/foo"`),
 		}},
@@ -131,29 +131,29 @@ func TestT(t *testing.T) {
 			`<a href="/foo">Knop X</a>`},
 
 		// Tag with innerHTML
-		{"tag with content", "btn5|phone me: %[phone]", []interface{}{Tag("a", `href="tel:555"`, `5-5-5`)},
+		{"tag with content", "btn5|phone me: %[phone]", []any{Tag("a", `href="tel:555"`, `5-5-5`)},
 			`phone me: <a href="tel:555">5-5-5</a>`,
 			`bel me: <a href="tel:555">5-5-5</a>`},
-		{"tag with content", "btn6|phone me: %(phone)", []interface{}{Tag("a", `href="tel:555"`, `5-5-5`)},
+		{"tag with content", "btn6|phone me: %(phone)", []any{Tag("a", `href="tel:555"`, `5-5-5`)},
 			`phone me: <a href="tel:555">5-5-5</a>`,
 			`bel me: <a href="tel:555">5-5-5</a>`},
 
 		// Plurals
-		{"ants!", "ants!", []interface{}{N(0)}, "Help, I've got 0 ants in my trousers!", "Help, ik heb 0 mieren in m'n broek!"},
-		{"ants!", "ants!", []interface{}{N(1)}, "Help, I've got an ant in my trousers!", "Help, ik heb een mier in m'n broek!"},
-		{"ants!", "ants!", []interface{}{N(2)}, "Help, I've got 2 ants in my trousers!", "Help, ik heb 2 mieren in m'n broek!"},
+		{"ants!", "ants!", []any{N(0)}, "Help, I've got 0 ants in my trousers!", "Help, ik heb 0 mieren in m'n broek!"},
+		{"ants!", "ants!", []any{N(1)}, "Help, I've got an ant in my trousers!", "Help, ik heb een mier in m'n broek!"},
+		{"ants!", "ants!", []any{N(2)}, "Help, I've got 2 ants in my trousers!", "Help, ik heb 2 mieren in m'n broek!"},
 
 		// TODO: error reporting could be a bit better on this. Also have z18n
 		// CLI catch this.
-		{"ants!", "ants!", []interface{}{},
+		{"ants!", "ants!", []any{},
 			`Help, I've got !(z18n ERROR: no value for variable "n") ants in my trousers!`,
 			`Help, ik heb !(z18n ERROR: no value for variable "n") mieren in m'n broek!`},
-		{"plural", "hello", []interface{}{N(1)},
+		{"plural", "hello", []any{N(1)},
 			"!(z18n ERROR: plural form one is empty for en-NZ)",
 			"!(z18n ERROR: plural form one is empty for nl-NL)"},
 
 		// Errors
-		{"extra params", "hello", []interface{}{"X"}, "Hello", "Hallo"},
+		{"extra params", "hello", []any{"X"}, "Hello", "Hallo"},
 		{"no vars", "hello-loc", nil,
 			`Hello, !(z18n ERROR: no value for variable "loc")!`,
 			`Hallo, !(z18n ERROR: no value for variable "loc")!`},

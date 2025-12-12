@@ -41,7 +41,7 @@ type (
 	Plural int
 
 	// P is a shortcut for T() map parameters.
-	P map[string]interface{}
+	P map[string]any
 
 	Tagger interface {
 		Open() string

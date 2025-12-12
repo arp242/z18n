@@ -36,7 +36,7 @@ import "reflect"
 //	        return vv.String()
 //	    }
 //	}
-func simplify(value interface{}) (reflect.Value, reflect.Kind) {
+func simplify(value any) (reflect.Value, reflect.Kind) {
 	v := reflect.ValueOf(value)
 	// Actually, this causes problems with some types, like time.Time
 	//

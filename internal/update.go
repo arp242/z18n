@@ -135,8 +135,8 @@ func mergeFile(tpl msgfile.File, merge *msgfile.File) {
 	}
 }
 
-func asStringSlice(i interface{}) []string {
-	ii := i.([]interface{})
+func asStringSlice(i any) []string {
+	ii := i.([]any)
 	s := make([]string, 0, len(ii))
 	for _, ss := range ii {
 		s = append(s, ss.(string))

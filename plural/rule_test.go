@@ -9,7 +9,7 @@ import (
 )
 
 type pluralFormTest struct {
-	num  interface{}
+	num  any
 	form Form
 }
 

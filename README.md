@@ -562,7 +562,7 @@ b := NewBundle(...)
 l := b.Locale()
 
 tpl.ExecuteTemplate("foo.gohtml", struct {
-    T func(string, ...interface{}) template.HTML
+    T func(string, ...any) template.HTML
 }{l.T})
 ```
 

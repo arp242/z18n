@@ -7,7 +7,7 @@ import (
 
 func TestNewOperands(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		ops   *Operands
 		err   bool
 	}{

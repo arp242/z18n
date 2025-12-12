@@ -259,7 +259,7 @@ var mapping = map[language.Tag]*localize {
 	fmt.Print(string(f))
 }
 
-func readJSON(dst interface{}, file string) {
+func readJSON(dst any, file string) {
 	data, err := os.ReadFile("cldr-json/cldr-json/" + file)
 	if err != nil {
 		F(fmt.Errorf("reading %q: %s", file, err))

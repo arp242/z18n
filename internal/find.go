@@ -22,7 +22,7 @@ func Find(paths []string, lang, format string, fun, tplFun, tplExt []string) (st
 		Template: true,
 		Language: lang,
 		Modified: time.Now().UTC().Round(time.Second),
-		Options: map[string]interface{}{
+		Options: map[string]any{
 			"paths":    paths,
 			"language": lang,
 			"fun":      fun,
