@@ -131,7 +131,10 @@ func (f File) TOML() (string, error) {
 // TODO: implement MarshalTOML instead.
 func (e Entries) toml(isTpl bool) (string, error) {
 	b := new(strings.Builder)
-	for _, x := range e.Sorted() {
+	for i, x := range e.Sorted() {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
 		fmt.Fprintf(b, "[%s]\n", tomlString(x.ID))
 		if x.Updated != "" {
 			fmt.Fprintf(b, "  updated = %s\n", tomlString(x.Updated))
@@ -172,7 +175,6 @@ func (e Entries) toml(isTpl bool) (string, error) {
 		if x.Many != "" {
 			fmt.Fprintf(b, "  many    = %s\n", tomlString(x.Many))
 		}
-		b.WriteByte('\n')
 	}
 	return b.String(), nil
 }
